@@ -1,0 +1,77 @@
+export default function Contact() {
+  return (
+    <section className="contact-section">
+
+      {/* LEFT */}
+      <div className="contact-left">
+
+        <h1 className="contact-title">
+          Contact <span>Me</span>
+        </h1>
+
+        <p>
+          Feel free to reach out to collaborate on a project or simply connect.
+        </p>
+
+        <div className="contact-left">
+
+  <h1>
+    Contact <span>Me</span>
+  </h1>
+
+  <div className="contact-card">
+    <h3>💻 GitHub</h3>
+    <a href="https://github.com/arjpuncia-collab" target="_blank">
+      @arjpuncia-collab
+    </a>
+  </div>
+
+  <div className="contact-card">
+    <h3>📧 Email</h3>
+    <p>arvinpuncia@gmail.com</p>
+  </div>
+
+  <div className="contact-card">
+    <h3>📱 Phone Number</h3>
+    <p>+63 9511458948</p>
+  </div>
+
+</div>
+
+      </div>
+
+      {/* RIGHT */}
+      <div className="contact-right">
+
+        <h1 className="contact-title">
+          Send <span>Message</span>
+        </h1>
+
+        <form className="contact-form">
+
+          <input
+            type="text"
+            placeholder="Your Name"
+          />
+
+          <input
+            type="email"
+            placeholder="Your Email"
+          />
+
+          <textarea
+            placeholder="Your Message"
+            rows={6}
+          />
+
+          <button type="submit">
+            Send Message
+          </button>
+
+        </form>
+
+      </div>
+
+    </section>
+  );
+}
