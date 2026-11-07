@@ -18,7 +18,7 @@ export default function Home() {
           </h1>
 
           <p>
-            I am a web developer focused on building modern,
+            I'm a web developer focused on building modern,
             responsive and efficient websites using Next.js,
             React, TypeScript and Tailwind CSS.
           </p>
@@ -55,7 +55,7 @@ export default function Home() {
 
             <Image
               src="/banal.png"
-              alt="Arvin"
+              alt="Portrait of Arvin Jay Puncia"
               width={400}
               height={500}
               className="profileImg"
