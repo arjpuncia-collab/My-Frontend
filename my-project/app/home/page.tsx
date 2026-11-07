@@ -18,7 +18,7 @@ export default function Home() {
           </h1>
 
           <p>
-            I'm a web developer focused on building modern,
+            I&apos;m a web developer focused on building modern,
             responsive and efficient websites using Next.js,
             React, TypeScript and Tailwind CSS.
           </p>
