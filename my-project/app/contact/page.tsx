@@ -14,12 +14,7 @@ export default function Contact() {
         </p>
 
         <div className="contact-left">
-
-  <h1>
-    Contact <span>Me</span>
-  </h1>
-
-  <div className="contact-card">
+<div className="contact-card">
     <h3>💻 GitHub</h3>
     <a href="https://github.com/arjpuncia-collab" target="_blank">
       @arjpuncia-collab
