@@ -32,7 +32,7 @@ export default function Contact() {
 
   <div className="contact-details">
     <span className="contact-label">Email</span>
-    <p>arvinpuncia@gmail.com</p>
+    <p>arjpuncia@gbox.ncf.edu.ph</p>
   </div>
 </div>
 
