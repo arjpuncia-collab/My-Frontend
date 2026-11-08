@@ -1,44 +1,50 @@
 import Image from "next/image";
 
-export default function About() {
+export default function AboutPage() {
   return (
     <section className="about-section">
 
-      {/* Left Side */}
-      <div className="about-image">
+      {/* LEFT */}
+      <div className="about-left">
         <Image
           src="/banal.png"
           alt="Arvin"
+          className="about-image"
           width={400}
-          height={550}
-          className="about-img"
+          height={500}
         />
-
       </div>
 
-      {/* Right Side */}
-      <div className="about-content">
+      {/* RIGHT */}
+      <div className="about-right">
 
-        <h1>About Me</h1>
+        <div className="about-card">
+          <h1>About Me</h1>
 
-        <p>
-          Hi! I&apos;m Arvin Jay Puncia, a Bachelor of Science in Information Technology (BSIT) student who is passionate about web development and creating modern digital experiences. I enjoy building responsive, user-friendly, and visually appealing websites using technologies such as HTML, CSS, JavaScript, React, and Next.js. As an aspiring developer, I am continuously learning new technologies and improving my skills to create innovative solutions that solve real-world problems. My goal is to grow as a professional developer and contribute to meaningful projects that make a positive impact.
-        </p>
-
-        <div className="info-card">
-          <span>📍</span>
-          <div>
-            <h3>My Location</h3>
-            <p>Lupi Sanfernando, Camarines Sur</p>
-          </div>
+          <p>
+            Hi! I&apos;m Arvin Jay Puncia, a BSIT student and aspiring web developer passionate about creating modern, responsive, and user-friendly web applications. I enjoy learning new technologies, building creative projects, and continuously improving my skills in web development. Outside of coding, I enjoy gaming, football, badminton, anime, and music.
+          </p>
         </div>
 
-        <div className="info-card highlight-card">
-          <span>📞</span>
-          <div>
-            <h3>My Phone Number</h3>
-            <p>+63 9511458948</p>
+        <div className="skills-card">
+
+          <h2>💻 Skills &amp; Technologies</h2>
+
+          <div className="skills-tags">
+            <span>HTML</span>
+            <span>CSS</span>
+            <span>JavaScript</span>
+            <span>TypeScript</span>
+            <span>React</span>
+            <span>Next.js</span>
+            <span>Tailwind CSS</span>
+            <span>MySQL</span>
+            <span>Git</span>
+            <span>GitHub</span>
+            <span>Responsive Design</span>
+            <span>UI/UX Design</span>
           </div>
+
         </div>
 
       </div>

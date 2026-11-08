@@ -7,36 +7,36 @@ export default function Home() {
         {/* Left */}
         <div className="left">
 
-          <span className="welcome">
-            Welcome
-          </span>
+          <span className="hero-tag">
+  WELCOME TO MY PORTFOLIO
+</span>
 
-          <h1>
-            Hello Everyone
-            <br />
-            <span>Arvin Jay Puncia</span>
-          </h1>
+<h1 className="hero-title">
+  Hi, I&apos;m
+  <br />
+  <span>Arvin Jay Puncia</span>
+</h1>
 
-          <p>
-            I&apos;m a web developer focused on building modern,
-            responsive and efficient websites using Next.js,
-            React, TypeScript and Tailwind CSS.
-          </p>
+<p className="hero-description">
+  BSIT Student and Aspiring Web Developer passionate about
+  creating modern, responsive, and user-friendly web applications
+  using Next.js, React, TypeScript, and Tailwind CSS.
+</p>
 
           <div className="stats">
 
             <div className="card">
-              <h2>5+</h2>
-              <span>Projects Completed</span>
-            </div>
+                <h2>💡</h2>
+  <span>Innovation & Creativity</span>
+</div>
 
             <div className="card">
               <h2>BSIT</h2>
-              <span>2nd Year Student</span>
-            </div>
+  <span>Student Developer</span>
+</div>
 
             <div className="card">
-              <h2>100%</h2>
+              <h2>💯</h2>
               <span>Dedication, Passion and Creativity</span>
             </div>
 

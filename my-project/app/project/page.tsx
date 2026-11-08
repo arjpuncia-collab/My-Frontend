@@ -30,7 +30,7 @@ export default function Project() {
 
   return (
     <section className="project-section">
-      <h1 className="project-title">Latest Project</h1>
+      <h1 className="project-title">Simple Project</h1>
 
       <div className="project-grid">
         {projects.map((project, index) => (

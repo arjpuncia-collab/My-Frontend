@@ -13,24 +13,36 @@ export default function Contact() {
           Feel free to reach out to collaborate on a project or simply connect.
         </p>
 
-        <div className="contact-left">
-<div className="contact-card">
-    <h3>💻 GitHub</h3>
-    <a href="https://github.com/arjpuncia-collab" target="_blank">
-      @arjpuncia-collab
+        <div className="contact-card">
+  <div className="contact-icon">💻</div>
+
+  <div className="contact-details">
+    <span className="contact-label">GitHub</span>
+    <a
+      href="https://github.com/arjpuncia-collab"
+      target="_blank"
+    >
+      <p>@arjpuncia-collab</p>
     </a>
   </div>
+</div>
 
-  <div className="contact-card">
-    <h3>📧 Email</h3>
+<div className="contact-card">
+  <div className="contact-icon">📧</div>
+
+  <div className="contact-details">
+    <span className="contact-label">Email</span>
     <p>arvinpuncia@gmail.com</p>
   </div>
+</div>
 
-  <div className="contact-card">
-    <h3>📱 Phone Number</h3>
+<div className="contact-card">
+  <div className="contact-icon">📱</div>
+
+  <div className="contact-details">
+    <span className="contact-label">Phone</span>
     <p>+63 9511458948</p>
   </div>
-
 </div>
 
       </div>

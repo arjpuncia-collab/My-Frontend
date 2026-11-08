@@ -12,18 +12,21 @@ export default function RootLayout({
   const pathname = usePathname();
 
   const navItems = [
-    { name: "HOME", href: "/home" },
-    { name: "ABOUT", href: "/about" },
-    { name: "PROJECT", href: "/project" },
-    { name: "SKILL", href: "/skill" },
-    { name: "CONTACT", href: "/contact" },
-  ];
+  { name: "HOME", href: "/home" },
+  { name: "ABOUT", href: "/about" },
+  { name: "EDUCATION", href: "/education" },
+  { name: "PROJECT", href: "/project" },
+  { name: "HOBBIES", href: "/hobbies" },
+  { name: "CONTACT", href: "/contact" },
+];
 
   return (
     <html lang="en">
       <body>
         <nav className="navbar">
-          <h1 className="logo">Arvin J.</h1>
+          <div className="logo-container">
+            <h1 className="logo">DevPortfolio</h1>
+          </div>
 
           <ul className="menu">
             {navItems.map((item) => (
