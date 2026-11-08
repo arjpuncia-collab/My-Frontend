@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { Metadata } from "next";
 import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "Arvin Jay Puncia | Portfolio",
+  description: "BSIT Student & Aspiring Web Developer",
+};
 
 export default function RootLayout({
   children,
