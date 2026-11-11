@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useState, type SubmitEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   Plane,
@@ -47,7 +47,7 @@ export default function RegisterPage() {
   const strength = getStrength();
 
   const handleRegister = async (
-    e: FormEvent<HTMLFormElement>
+    e: SubmitEvent<HTMLFormElement>
   ) => {
     e.preventDefault();
 
@@ -61,6 +61,11 @@ export default function RegisterPage() {
       return;
     }
 
+    if (cleanUsername.length < 3) {
+      setError("Username must be at least 3 characters.");
+      return;
+    }
+
     if (password.length < 8) {
       setError("Password must be at least 8 characters.");
       return;
@@ -71,45 +76,43 @@ export default function RegisterPage() {
       return;
     }
 
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+    if (!API_URL) {
+      setError("Backend API URL is not configured.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // FRONTEND DEMO ONLY
-      // No backend or database connection yet.
-
-      await new Promise((resolve) =>
-        setTimeout(resolve, 700)
+      const response = await fetch(
+        `${API_URL.replace(/\/+$/, "")}/auth/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: cleanUsername,
+            password,
+          }),
+        }
       );
 
-      const existingUsers = JSON.parse(
-        localStorage.getItem("flightsys_demo_users") || "[]"
-      );
+      const data = await response.json().catch(() => ({}));
 
-      const userExists = existingUsers.some(
-        (user: { username: string }) =>
-          user.username.toLowerCase() ===
-          cleanUsername.toLowerCase()
-      );
+      if (!response.ok) {
+        const errorMessage = Array.isArray(data.message)
+          ? data.message.join(", ")
+          : data.message || data.error || "Registration failed.";
 
-      if (userExists) {
-        throw new Error("Username is already registered.");
+        throw new Error(errorMessage);
       }
 
-      const newUser = {
-        username: cleanUsername,
-        password,
-        role: "Customer",
-        createdAt: new Date().toISOString(),
-      };
-
-      existingUsers.push(newUser);
-
-      localStorage.setItem(
-        "flightsys_demo_users",
-        JSON.stringify(existingUsers)
+      setSuccess(
+        "Account created successfully! Redirecting to login..."
       );
-
-      setSuccess("Account created successfully!");
 
       setUsername("");
       setPassword("");
@@ -123,7 +126,7 @@ export default function RegisterPage() {
       setError(
         err instanceof Error
           ? err.message
-          : "Registration failed."
+          : "Cannot connect to the backend server."
       );
     } finally {
       setLoading(false);
