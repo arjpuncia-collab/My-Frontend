@@ -79,7 +79,7 @@ const activities = [
   },
 ];
 
-function getUsername(token: string) {
+function decodeToken(token: string) {
   try {
     const payload = token.split(".")[1];
 
@@ -89,9 +89,9 @@ function getUsername(token: string) {
       .replace(/-/g, "+")
       .replace(/_/g, "/");
 
-    const decoded = JSON.parse(atob(normalized));
+    const decoded = atob(normalized);
 
-    return decoded;
+    return JSON.parse(decoded);
   } catch {
     return null;
   }
@@ -101,11 +101,36 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const [username, setUsername] = useState("Administrator");
+  const [role, setRole] = useState("Customer");
   const [loading, setLoading] = useState(true);
   const [activePage, setActivePage] = useState("Dashboard");
 
   useEffect(() => {
     const checkAuth = () => {
+      // 1. Check frontend demo session
+      const demoSession = localStorage.getItem(
+        "flightsys_demo_session"
+      );
+
+      if (demoSession) {
+        try {
+          const session = JSON.parse(demoSession);
+
+          if (
+            session?.username &&
+            session?.demo === true
+          ) {
+            setUsername(session.username);
+            setRole(session.role || "Customer");
+            setLoading(false);
+            return;
+          }
+        } catch {
+          localStorage.removeItem("flightsys_demo_session");
+        }
+      }
+
+      // 2. Check real JWT token
       const token = localStorage.getItem("token");
 
       if (!token) {
@@ -113,7 +138,7 @@ export default function DashboardPage() {
         return;
       }
 
-      const payload = getUsername(token);
+      const payload = decodeToken(token);
 
       const expired =
         !!payload?.exp &&
@@ -122,22 +147,26 @@ export default function DashboardPage() {
       if (!payload?.username || expired) {
         localStorage.removeItem("token");
         localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
+
         router.replace("/login");
         return;
       }
 
-      // Only update state if valid
       setUsername(payload.username);
+      setRole(payload.role || "Customer");
       setLoading(false);
     };
 
-    // Defer state update to avoid cascading renders
-    setTimeout(checkAuth, 0);
+    checkAuth();
   }, [router]);
 
   const handleLogout = () => {
+    localStorage.removeItem("flightsys_demo_session");
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
+
     router.replace("/login");
   };
 
@@ -153,7 +182,6 @@ export default function DashboardPage() {
 
   return (
     <div className="fs-dashboard">
-
       {/* TOP NAVIGATION */}
       <header className="fs-topbar">
         <div className="fs-brand">
@@ -169,11 +197,13 @@ export default function DashboardPage() {
         <div className="fs-topbar-right">
           <div className="fs-user-label">
             Welcome,
-            <span className="fs-user-name">{username}</span>
+            <span className="fs-user-name">
+              {username}
+            </span>
           </div>
 
           <div className="fs-avatar">
-            {String(username).charAt(0).toUpperCase()}
+            {username.charAt(0).toUpperCase()}
           </div>
 
           <button
@@ -188,7 +218,6 @@ export default function DashboardPage() {
 
       {/* DASHBOARD CONTENT */}
       <main className="fs-dashboard-content">
-
         {/* PAGE HEADING */}
         <section className="fs-dashboard-heading">
           <div>
@@ -252,7 +281,10 @@ export default function DashboardPage() {
                 const Icon = stat.icon;
 
                 return (
-                  <div className="fs-stat-card" key={stat.title}>
+                  <div
+                    className="fs-stat-card"
+                    key={stat.title}
+                  >
                     <div className="fs-stat-top">
                       <span className="fs-stat-label">
                         {stat.title}
@@ -277,7 +309,6 @@ export default function DashboardPage() {
 
             {/* MAIN DASHBOARD GRID */}
             <section className="fs-dashboard-grid">
-
               {/* RECENT ACTIVITY */}
               <div className="fs-panel">
                 <div className="fs-panel-header">
@@ -285,6 +316,7 @@ export default function DashboardPage() {
                     <h2 className="fs-panel-title">
                       Recent Activity
                     </h2>
+
                     <p className="fs-panel-description">
                       Latest airline management activities
                     </p>
@@ -330,13 +362,13 @@ export default function DashboardPage() {
 
               {/* SIDE INFORMATION */}
               <div className="fs-side-stack">
-
                 <div className="fs-panel">
                   <div className="fs-panel-header">
                     <div>
                       <h2 className="fs-panel-title">
                         Quick Information
                       </h2>
+
                       <p className="fs-panel-description">
                         System overview
                       </p>
@@ -351,7 +383,10 @@ export default function DashboardPage() {
                         </div>
                         Flight Schedule
                       </div>
-                      <span className="fs-info-value">120</span>
+
+                      <span className="fs-info-value">
+                        120
+                      </span>
                     </div>
 
                     <div className="fs-info-row">
@@ -361,7 +396,10 @@ export default function DashboardPage() {
                         </div>
                         Passengers
                       </div>
-                      <span className="fs-info-value">450</span>
+
+                      <span className="fs-info-value">
+                        450
+                      </span>
                     </div>
 
                     <div className="fs-info-row">
@@ -371,7 +409,10 @@ export default function DashboardPage() {
                         </div>
                         Bookings
                       </div>
-                      <span className="fs-info-value">210</span>
+
+                      <span className="fs-info-value">
+                        210
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -403,7 +444,7 @@ export default function DashboardPage() {
                         verticalAlign: "middle",
                       }}
                     />
-                    FlightSys management interface.
+                    Role: {role}
                   </p>
 
                   <p className="fs-system-text">

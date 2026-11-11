@@ -16,6 +16,13 @@ import {
   Loader2,
 } from "lucide-react";
 
+type DemoUser = {
+  username: string;
+  password: string;
+  role: string;
+  createdAt: string;
+};
+
 export default function LoginPage() {
   const router = useRouter();
 
@@ -23,71 +30,77 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (
+    e: FormEvent<HTMLFormElement>
+  ) => {
     e.preventDefault();
 
+    setError("");
+
     if (!username.trim() || !password) {
-      alert("Please enter your username and password.");
+      setError("Please enter your username and password.");
       return;
     }
 
+    setLoading(true);
+
     try {
-      setLoading(true);
+      // FRONTEND DEMO LOGIN ONLY
 
-      const apiUrl =
-        process.env.NEXT_PUBLIC_API_URL ||
-        "http://localhost:3000";
+      await new Promise((resolve) =>
+        setTimeout(resolve, 700)
+      );
 
-      const response = await fetch(`${apiUrl}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: username.trim(),
-          password,
-        }),
-      });
+      const storedUsers: DemoUser[] = JSON.parse(
+        localStorage.getItem("flightsys_demo_users") || "[]"
+      );
 
-      const responseText = await response.text();
+      const user = storedUsers.find(
+        (item) =>
+          item.username.toLowerCase() ===
+            username.trim().toLowerCase() &&
+          item.password === password
+      );
 
-      let result;
-
-      try {
-        result = JSON.parse(responseText);
-      } catch {
-        result = { message: responseText };
+      if (!user) {
+        throw new Error(
+          "Invalid username or password."
+        );
       }
 
-      if (!response.ok) {
-        const message = Array.isArray(result.message)
-          ? result.message.join(", ")
-          : result.message || result.error || "Invalid username or password.";
+      // Create demo session
+      const demoSession = {
+        username: user.username,
+        role: user.role,
+        loginAt: new Date().toISOString(),
+        demo: true,
+      };
 
-        alert(message);
-        return;
-      }
+      localStorage.setItem(
+        "flightsys_demo_session",
+        JSON.stringify(demoSession)
+      );
 
-      if (!result.accessToken) {
-        alert("Login response did not contain an access token.");
-        return;
-      }
+      // Demo token only. Not a real JWT.
+      localStorage.setItem(
+        "token",
+        "FLIGHTSYS-DEMO-SESSION"
+      );
 
-      // Preserve existing JWT authentication
-      localStorage.setItem("token", result.accessToken);
-
-      if (result.refreshToken) {
-        localStorage.setItem("refreshToken", result.refreshToken);
-      }
+      localStorage.setItem(
+        "user",
+        JSON.stringify(demoSession)
+      );
 
       router.push("/dashboard");
 
-    } catch (error) {
-      console.error("Login error:", error);
-
-      alert(
-        "Cannot connect to the server. Please check your backend."
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Login failed."
       );
     } finally {
       setLoading(false);
@@ -96,16 +109,19 @@ export default function LoginPage() {
 
   return (
     <div className="fs-page">
+
       <div className="fs-bg-glow fs-glow-left" />
       <div className="fs-bg-glow fs-glow-right" />
       <div className="fs-bg-grid" />
 
       {/* NAVBAR */}
       <nav className="fs-navbar">
+
         <Link href="/" className="fs-brand">
           <span className="fs-brand-icon">
             <Plane size={23} />
           </span>
+
           <span>
             FLIGHT<span>SYS</span>
           </span>
@@ -113,10 +129,12 @@ export default function LoginPage() {
 
         <div className="fs-nav-login">
           <span>New to FlightSys?</span>
+
           <Link href="/register">
             Create Account <ArrowRight size={15} />
           </Link>
         </div>
+
       </nav>
 
       {/* MAIN CONTENT */}
@@ -124,6 +142,7 @@ export default function LoginPage() {
 
         {/* LEFT HERO */}
         <section className="fs-hero">
+
           <div className="fs-eyebrow">
             <Plane size={14} />
             YOUR JOURNEY CONTINUES HERE
@@ -143,6 +162,7 @@ export default function LoginPage() {
           </p>
 
           <div className="fs-flight-visual">
+
             <div className="fs-visual-glow" />
             <div className="fs-orbit fs-orbit-one" />
             <div className="fs-orbit fs-orbit-two" />
@@ -160,11 +180,14 @@ export default function LoginPage() {
               <span>FLIGHTSYS EXPERIENCE</span>
               <h3>Your journey starts here.</h3>
             </div>
+
           </div>
 
           <div className="fs-features">
+
             <div className="fs-feature">
               <ShieldCheck size={25} />
+
               <div>
                 <strong>Secure Login</strong>
                 <span>Protected account access</span>
@@ -173,20 +196,26 @@ export default function LoginPage() {
 
             <div className="fs-feature">
               <Globe2 size={25} />
+
               <div>
                 <strong>Explore More</strong>
                 <span>Your journey awaits</span>
               </div>
             </div>
+
           </div>
+
         </section>
 
         {/* LOGIN FORM */}
         <section className="fs-register-area">
+
           <div className="fs-register-card">
+
             <div className="fs-card-accent" />
 
             <div className="fs-form-heading">
+
               <div className="fs-form-icon">
                 <User size={25} />
               </div>
@@ -200,17 +229,32 @@ export default function LoginPage() {
               <p>
                 Enter your credentials to access your account.
               </p>
+
             </div>
 
-            <form className="fs-form" onSubmit={handleLogin}>
+            <form
+              className="fs-form"
+              onSubmit={handleLogin}
+            >
+
+              {error && (
+                <div
+                  role="alert"
+                  className="fs-match fs-match-error"
+                >
+                  {error}
+                </div>
+              )}
 
               {/* USERNAME */}
               <div className="fs-field">
+
                 <label htmlFor="login-username">
                   Username
                 </label>
 
                 <div className="fs-input-box">
+
                   <User
                     className="fs-input-icon"
                     size={19}
@@ -227,16 +271,20 @@ export default function LoginPage() {
                     autoComplete="username"
                     required
                   />
+
                 </div>
+
               </div>
 
               {/* PASSWORD */}
               <div className="fs-field">
+
                 <label htmlFor="login-password">
                   Password
                 </label>
 
                 <div className="fs-input-box">
+
                   <LockKeyhole
                     className="fs-input-icon"
                     size={19}
@@ -244,7 +292,9 @@ export default function LoginPage() {
 
                   <input
                     id="login-password"
-                    type={showPassword ? "text" : "password"}
+                    type={
+                      showPassword ? "text" : "password"
+                    }
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) =>
@@ -272,7 +322,9 @@ export default function LoginPage() {
                       <Eye size={19} />
                     )}
                   </button>
+
                 </div>
+
               </div>
 
               {/* LOGIN BUTTON */}
@@ -281,6 +333,7 @@ export default function LoginPage() {
                 className="fs-submit"
                 disabled={loading}
               >
+
                 {loading ? (
                   <>
                     <Loader2
@@ -295,6 +348,7 @@ export default function LoginPage() {
                     <ArrowRight size={18} />
                   </>
                 )}
+
               </button>
 
             </form>
@@ -302,18 +356,22 @@ export default function LoginPage() {
             {/* FOOTER */}
             <div className="fs-card-footer">
               Don&apos;t have an account?
+
               <Link href="/register">
                 Create Account
               </Link>
             </div>
+
           </div>
 
           <p className="fs-copyright">
             © 2026 FlightSys. All rights reserved.
           </p>
+
         </section>
 
       </main>
+
     </div>
   );
 }
