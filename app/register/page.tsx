@@ -1,60 +1,58 @@
+
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Plane } from "lucide-react";
+import {
+  Plane,
+  User,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  ShieldCheck,
+  Globe2,
+  Sparkles,
+  CheckCircle2,
+} from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] =
-    useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const [showPassword, setShowPassword] =
-    useState(false);
+  const getStrength = () => {
+    if (!password) return { label: "Not entered", score: 0 };
 
-  const [showConfirmPassword,
-    setShowConfirmPassword] =
-    useState(false);
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
 
-  const [loading, setLoading] =
-    useState(false);
-
-  const getPasswordStrength = () => {
-    if (password.length < 4) {
-      return {
-        text: "Weak",
-        width: "30%",
-        color: "bg-red-500",
-      };
-    }
-
-    if (password.length < 8) {
-      return {
-        text: "Medium",
-        width: "60%",
-        color: "bg-yellow-500",
-      };
-    }
-
-    return {
-      text: "Strong",
-      width: "100%",
-      color: "bg-green-500",
-    };
+    if (score <= 1) return { label: "Weak", score: 1 };
+    if (score <= 2) return { label: "Medium", score: 2 };
+    return { label: "Strong", score: 3 };
   };
 
-  const handleRegister = async () => {
+  const strength = getStrength();
+
+  const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
     if (!username.trim()) {
       alert("Username is required");
       return;
     }
 
-    if (!password.trim()) {
-      alert("Password is required");
+    if (password.length < 8) {
+      alert("Password must be at least 8 characters");
       return;
     }
 
@@ -66,225 +64,272 @@ export default function RegisterPage() {
     try {
       setLoading(true);
 
-      const response = await fetch(
-        "http://localhost:3000/auth/register",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            username,
-            password,
-          }),
-        }
-      );
+      const apiUrl =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+
+      const response = await fetch(`${apiUrl}/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
 
       const result = await response.json();
 
-      if (result.error) {
-        alert(result.error);
+      if (!response.ok || result.error) {
+        alert(result.error || "Registration failed");
         return;
       }
 
-      alert("Registration Successful!");
+      alert("Registration successful!");
       router.push("/login");
     } catch (error) {
       console.error(error);
-      alert("Registration Failed");
+      alert("Registration failed. Check your server connection.");
     } finally {
       setLoading(false);
     }
   };
 
-  const strength =
-    getPasswordStrength();
-
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black px-4">
+    <main className="fs-page">
 
-      {/* Background Glow */}
-      <div className="absolute left-0 top-0 h-96 w-96 rounded-full bg-red-600/20 blur-3xl" />
+      {/* Background effects */}
+      <div className="fs-bg-glow fs-glow-left" />
+      <div className="fs-bg-glow fs-glow-right" />
+      <div className="fs-bg-grid" />
 
-      <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-red-500/20 blur-3xl" />
+      {/* Navigation */}
+      <header className="fs-navbar">
+        <Link href="/" className="fs-brand">
+          <span className="fs-brand-icon">
+            <Plane size={23} />
+          </span>
+          <span>FLIGHT<span>SYS</span></span>
+        </Link>
 
-      <div className="w-full max-w-md rounded-3xl border border-red-500/20 bg-zinc-950/90 p-8 backdrop-blur-xl shadow-[0_0_40px_rgba(220,38,38,0.2)]">
+        <div className="fs-nav-login">
+          <span>Already a member?</span>
+          <Link href="/login">
+            Sign in <ArrowRight size={15} />
+          </Link>
+        </div>
+      </header>
 
-        {/* Header */}
-        <div className="mb-8 text-center">
+      {/* Main content */}
+      <section className="fs-main">
 
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-red-600">
-            <Plane size={34} />
+        {/* Left hero */}
+        <div className="fs-hero">
+
+          <div className="fs-eyebrow">
+            <Sparkles size={14} />
+            YOUR JOURNEY STARTS HERE
           </div>
 
-          <h1 className="mt-4 text-4xl font-bold text-white">
-            FlightSys
+          <h1>
+            Explore the
+            <br />
+            world <span>beyond.</span>
           </h1>
 
-          <p className="mt-2 text-zinc-400">
-            Create Your Account
+          <p className="fs-description">
+            Discover new destinations and experience a
+            seamless travel journey. Your next adventure
+            begins with FlightSys.
           </p>
 
+          {/* Aviation illustration */}
+          <div className="fs-flight-visual">
+            <div className="fs-visual-glow" />
+            <div className="fs-orbit fs-orbit-one" />
+            <div className="fs-orbit fs-orbit-two" />
+
+            <Plane className="fs-hero-plane" size={110} strokeWidth={1.1} />
+
+            <Globe2 className="fs-visual-globe" size={25} />
+
+            <div className="fs-visual-caption">
+              <span>FLIGHTSYS EXPERIENCE</span>
+              <h3>Travel without limits.</h3>
+            </div>
+          </div>
+
+          <div className="fs-features">
+            <div className="fs-feature">
+              <ShieldCheck size={23} />
+              <div>
+                <strong>Secure Access</strong>
+                <span>Account protection</span>
+              </div>
+            </div>
+
+            <div className="fs-feature">
+              <Globe2 size={23} />
+              <div>
+                <strong>Explore More</strong>
+                <span>Your journey awaits</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Username */}
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) =>
-            setUsername(e.target.value)
-          }
-          className="w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white outline-none focus:border-red-500"
-        />
+        {/* Registration card */}
+        <div className="fs-register-area">
 
-        {/* Password */}
-        <div className="relative mt-4">
+          <div className="fs-register-card">
 
-          <input
-            type={
-              showPassword
-                ? "text"
-                : "password"
-            }
-            placeholder="Password"
-            value={password}
-            onChange={(e) =>
-              setPassword(
-                e.target.value
-              )
-            }
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white outline-none focus:border-red-500"
-          />
+            <div className="fs-card-accent" />
 
-          <button
-            type="button"
-            onClick={() =>
-              setShowPassword(
-                !showPassword
-              )
-            }
-            className="absolute right-4 top-4 text-zinc-400"
-          >
-            {showPassword ? (
-              <EyeOff size={18} />
-            ) : (
-              <Eye size={18} />
-            )}
-          </button>
+            <div className="fs-form-heading">
+              <div className="fs-form-icon">
+                <User size={25} />
+              </div>
 
-        </div>
+              <span className="fs-form-label">CREATE YOUR ACCOUNT</span>
 
-        {/* Strength */}
-        <div className="mt-2">
+              <h2>Join FlightSys.</h2>
+              <p>Start your journey with us today.</p>
+            </div>
 
-          <div className="h-2 rounded-full bg-zinc-800">
+            <form onSubmit={handleRegister} className="fs-form">
 
-            <div
-              className={`h-2 rounded-full ${strength.color}`}
-              style={{
-                width:
-                  strength.width,
-              }}
-            />
+              {/* Username */}
+              <div className="fs-field">
+                <label htmlFor="fs-username">Username</label>
+
+                <div className="fs-input-box">
+                  <User className="fs-input-icon" size={18} />
+
+                  <input
+                    id="fs-username"
+                    type="text"
+                    placeholder="Enter your username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    autoComplete="username"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div className="fs-field">
+                <label htmlFor="fs-password">Password</label>
+
+                <div className="fs-input-box">
+                  <Lock className="fs-input-icon" size={18} />
+
+                  <input
+                    id="fs-password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Create a password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="new-password"
+                    required
+                  />
+
+                  <button
+                    type="button"
+                    className="fs-eye"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label="Toggle password visibility"
+                  >
+                    {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
+                  </button>
+                </div>
+
+                <div className="fs-strength-info">
+                  <span>Password strength</span>
+                  <span className={`fs-strength-label strength-${strength.score}`}>
+                    {strength.label}
+                  </span>
+                </div>
+
+                <div className="fs-strength-track">
+                  <div
+                    className={`fs-strength-fill strength-bar-${strength.score}`}
+                    style={{
+                      width: `${strength.score === 0 ? 0 : strength.score === 1 ? 25 : strength.score === 2 ? 60 : 100}%`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Confirm password */}
+              <div className="fs-field">
+                <label htmlFor="fs-confirm">Confirm Password</label>
+
+                <div className="fs-input-box">
+                  <Lock className="fs-input-icon" size={18} />
+
+                  <input
+                    id="fs-confirm"
+                    type={showConfirm ? "text" : "password"}
+                    placeholder="Confirm your password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
+                    required
+                  />
+
+                  <button
+                    type="button"
+                    className="fs-eye"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    aria-label="Toggle confirm password visibility"
+                  >
+                    {showConfirm ? <EyeOff size={19} /> : <Eye size={19} />}
+                  </button>
+                </div>
+
+                {confirmPassword && (
+                  <div className={
+                    password === confirmPassword
+                      ? "fs-match fs-match-success"
+                      : "fs-match fs-match-error"
+                  }>
+                    <CheckCircle2 size={14} />
+                    {password === confirmPassword
+                      ? "Passwords match"
+                      : "Passwords do not match"}
+                  </div>
+                )}
+              </div>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                className="fs-submit"
+                disabled={loading}
+              >
+                {loading ? (
+                  "Creating Account..."
+                ) : (
+                  <>
+                    Create Your Account
+                    <ArrowRight size={18} />
+                  </>
+                )}
+              </button>
+
+            </form>
+
+            <div className="fs-card-footer">
+              Already have an account?
+              <Link href="/login">Sign In</Link>
+            </div>
 
           </div>
 
-          <p className="mt-1 text-xs text-zinc-400">
-            Strength: {strength.text}
+          <p className="fs-copyright">
+            © 2026 FlightSys. All rights reserved.
           </p>
 
         </div>
-
-        {/* Confirm Password */}
-        <div className="relative mt-4">
-
-          <input
-            type={
-              showConfirmPassword
-                ? "text"
-                : "password"
-            }
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChange={(e) =>
-              setConfirmPassword(
-                e.target.value
-              )
-            }
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white outline-none focus:border-red-500"
-          />
-
-          <button
-            type="button"
-            onClick={() =>
-              setShowConfirmPassword(
-                !showConfirmPassword
-              )
-            }
-            className="absolute right-4 top-4 text-zinc-400"
-          >
-            {showConfirmPassword ? (
-              <EyeOff size={18} />
-            ) : (
-              <Eye size={18} />
-            )}
-          </button>
-
-        </div>
-
-        {/* Match Checker */}
-        {confirmPassword && (
-          <p
-            className={`mt-2 text-xs ${
-              password === confirmPassword
-                ? "text-green-500"
-                : "text-red-500"
-            }`}
-          >
-            {password ===
-            confirmPassword
-              ? "✓ Passwords Match"
-              : "✗ Passwords Do Not Match"}
-          </p>
-        )}
-
-        {/* Button */}
-        <button
-          onClick={handleRegister}
-          disabled={loading}
-          className="
-          mt-6
-          w-full
-          rounded-xl
-          bg-red-600
-          p-3
-          font-semibold
-          text-white
-          transition-all
-          duration-300
-          hover:bg-red-700
-          hover:scale-[1.02]
-          hover:shadow-[0_0_25px_rgba(220,38,38,0.8)]
-        "
-        >
-          {loading
-            ? "Creating Account..."
-            : "Register"}
-        </button>
-
-        <p className="mt-6 text-center text-zinc-400">
-          Already have an account?{" "}
-          <Link
-            href="/login"
-            className="text-red-500 hover:text-red-400"
-          >
-            Login
-          </Link>
-        </p>
-
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

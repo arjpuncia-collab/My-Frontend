@@ -1,163 +1,319 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Plane } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Plane,
+  User,
+  LockKeyhole,
+  ArrowRight,
+  ShieldCheck,
+  Globe2,
+  Loader2,
+} from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] =
-    useState(false);
-  const [loading, setLoading] =
-    useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
-    if (!username || !password) {
-      alert("Fill in all fields");
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!username.trim() || !password) {
+      alert("Please enter your username and password.");
       return;
     }
 
     try {
       setLoading(true);
 
-      const response = await fetch(
-        "http://localhost:3000/auth/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            username,
-            password,
-          }),
-        }
-      );
+      const apiUrl =
+        process.env.NEXT_PUBLIC_API_URL ||
+        "http://localhost:3000";
 
-      const result =
-        await response.json();
+      const response = await fetch(`${apiUrl}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: username.trim(),
+          password,
+        }),
+      });
 
-      if (result.error) {
-        alert(result.error);
+      const responseText = await response.text();
+
+      let result;
+
+      try {
+        result = JSON.parse(responseText);
+      } catch {
+        result = { message: responseText };
+      }
+
+      if (!response.ok) {
+        const message = Array.isArray(result.message)
+          ? result.message.join(", ")
+          : result.message || result.error || "Invalid username or password.";
+
+        alert(message);
         return;
       }
 
-      localStorage.setItem(
-        "token",
-        result.accessToken
-      );
+      if (!result.accessToken) {
+        alert("Login response did not contain an access token.");
+        return;
+      }
 
-      localStorage.setItem(
-        "refreshToken",
-        result.refreshToken
-      );
+      // Preserve existing JWT authentication
+      localStorage.setItem("token", result.accessToken);
+
+      if (result.refreshToken) {
+        localStorage.setItem("refreshToken", result.refreshToken);
+      }
 
       router.push("/dashboard");
+
     } catch (error) {
-      console.error(error);
-      alert("Login Failed");
+      console.error("Login error:", error);
+
+      alert(
+        "Cannot connect to the server. Please check your backend."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-black overflow-hidden p-4">
+    <div className="fs-page">
+      <div className="fs-bg-glow fs-glow-left" />
+      <div className="fs-bg-glow fs-glow-right" />
+      <div className="fs-bg-grid" />
 
-      <div className="absolute left-0 top-0 h-96 w-96 rounded-full bg-red-600/20 blur-3xl" />
-      <div className="absolute right-0 bottom-0 h-96 w-96 rounded-full bg-red-600/20 blur-3xl" />
+      {/* NAVBAR */}
+      <nav className="fs-navbar">
+        <Link href="/" className="fs-brand">
+          <span className="fs-brand-icon">
+            <Plane size={23} />
+          </span>
+          <span>
+            FLIGHT<span>SYS</span>
+          </span>
+        </Link>
 
-      <div className="w-full max-w-md rounded-3xl border border-red-500/20 bg-zinc-950/80 p-8 backdrop-blur-xl shadow-[0_0_40px_rgba(220,38,38,0.15)]">
-
-        <div className="mb-8 text-center">
-          <Plane
-            size={45}
-            className="mx-auto text-red-500"
-          />
-
-          <h1 className="mt-3 text-4xl font-bold text-white">
-            Welcome Back
-          </h1>
-
-          <p className="text-zinc-400">
-            Flight Reservation System
-          </p>
+        <div className="fs-nav-login">
+          <span>New to FlightSys?</span>
+          <Link href="/register">
+            Create Account <ArrowRight size={15} />
+          </Link>
         </div>
+      </nav>
 
-        <div className="space-y-4">
+      {/* MAIN CONTENT */}
+      <main className="fs-main">
 
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) =>
-              setUsername(e.target.value)
-            }
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white outline-none focus:border-red-500"
-          />
-
-          <div className="relative">
-
-            <input
-              type={
-                showPassword
-                  ? "text"
-                  : "password"
-              }
-              placeholder="Password"
-              value={password}
-              onChange={(e) =>
-                setPassword(e.target.value)
-              }
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white outline-none focus:border-red-500"
-            />
-
-            <button
-              type="button"
-              onClick={() =>
-                setShowPassword(
-                  !showPassword
-                )
-              }
-              className="absolute right-4 top-4 text-zinc-400"
-            >
-              {showPassword ? (
-                <EyeOff size={18} />
-              ) : (
-                <Eye size={18} />
-              )}
-            </button>
-
+        {/* LEFT HERO */}
+        <section className="fs-hero">
+          <div className="fs-eyebrow">
+            <Plane size={14} />
+            YOUR JOURNEY CONTINUES HERE
           </div>
 
-        </div>
+          <h1>
+            Welcome
+            <br />
+            <span>Back.</span>
+          </h1>
 
-        <button
-          onClick={handleLogin}
-          disabled={loading}
-          className="mt-6 w-full rounded-xl bg-red-600 p-3 font-semibold text-white transition-all duration-300 hover:bg-red-700 hover:shadow-[0_0_25px_rgba(220,38,38,0.8)]"
-        >
-          {loading
-            ? "Signing In..."
-            : "Login"}
-        </button>
+          <p className="fs-description">
+            Your next destination is waiting.
+            Sign in to manage your flights and
+            continue your seamless travel experience
+            with FlightSys.
+          </p>
 
-        <p className="mt-6 text-center text-zinc-400">
-          Don&apos;t have an account?{" "}
-          <Link
-            href="/register"
-            className="text-red-500 hover:text-red-400"
-          >
-            Register
-          </Link>
-        </p>
+          <div className="fs-flight-visual">
+            <div className="fs-visual-glow" />
+            <div className="fs-orbit fs-orbit-one" />
+            <div className="fs-orbit fs-orbit-two" />
 
-      </div>
+            <div className="fs-hero-plane">
+              <Plane size={100} strokeWidth={1.2} />
+            </div>
+
+            <Globe2
+              className="fs-visual-globe"
+              size={25}
+            />
+
+            <div className="fs-visual-caption">
+              <span>FLIGHTSYS EXPERIENCE</span>
+              <h3>Your journey starts here.</h3>
+            </div>
+          </div>
+
+          <div className="fs-features">
+            <div className="fs-feature">
+              <ShieldCheck size={25} />
+              <div>
+                <strong>Secure Login</strong>
+                <span>Protected account access</span>
+              </div>
+            </div>
+
+            <div className="fs-feature">
+              <Globe2 size={25} />
+              <div>
+                <strong>Explore More</strong>
+                <span>Your journey awaits</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* LOGIN FORM */}
+        <section className="fs-register-area">
+          <div className="fs-register-card">
+            <div className="fs-card-accent" />
+
+            <div className="fs-form-heading">
+              <div className="fs-form-icon">
+                <User size={25} />
+              </div>
+
+              <span className="fs-form-label">
+                WELCOME BACK
+              </span>
+
+              <h2>Sign In.</h2>
+
+              <p>
+                Enter your credentials to access your account.
+              </p>
+            </div>
+
+            <form className="fs-form" onSubmit={handleLogin}>
+
+              {/* USERNAME */}
+              <div className="fs-field">
+                <label htmlFor="login-username">
+                  Username
+                </label>
+
+                <div className="fs-input-box">
+                  <User
+                    className="fs-input-icon"
+                    size={19}
+                  />
+
+                  <input
+                    id="login-username"
+                    type="text"
+                    placeholder="Enter your username"
+                    value={username}
+                    onChange={(e) =>
+                      setUsername(e.target.value)
+                    }
+                    autoComplete="username"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* PASSWORD */}
+              <div className="fs-field">
+                <label htmlFor="login-password">
+                  Password
+                </label>
+
+                <div className="fs-input-box">
+                  <LockKeyhole
+                    className="fs-input-icon"
+                    size={19}
+                  />
+
+                  <input
+                    id="login-password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) =>
+                      setPassword(e.target.value)
+                    }
+                    autoComplete="current-password"
+                    required
+                  />
+
+                  <button
+                    type="button"
+                    className="fs-eye"
+                    onClick={() =>
+                      setShowPassword(!showPassword)
+                    }
+                    aria-label={
+                      showPassword
+                        ? "Hide password"
+                        : "Show password"
+                    }
+                  >
+                    {showPassword ? (
+                      <EyeOff size={19} />
+                    ) : (
+                      <Eye size={19} />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* LOGIN BUTTON */}
+              <button
+                type="submit"
+                className="fs-submit"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2
+                      size={18}
+                      className="animate-spin"
+                    />
+                    Signing In...
+                  </>
+                ) : (
+                  <>
+                    Sign In to Your Account
+                    <ArrowRight size={18} />
+                  </>
+                )}
+              </button>
+
+            </form>
+
+            {/* FOOTER */}
+            <div className="fs-card-footer">
+              Don&apos;t have an account?
+              <Link href="/register">
+                Create Account
+              </Link>
+            </div>
+          </div>
+
+          <p className="fs-copyright">
+            © 2026 FlightSys. All rights reserved.
+          </p>
+        </section>
+
+      </main>
     </div>
   );
 }

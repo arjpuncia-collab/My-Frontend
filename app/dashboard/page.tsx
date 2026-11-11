@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,247 +9,467 @@ import {
   Ticket,
   CreditCard,
   LogOut,
+  LayoutDashboard,
+  CalendarDays,
+  ShieldCheck,
+  Globe2,
+  Clock,
+  ArrowUpRight,
 } from "lucide-react";
 
-const getJwtPayload = (token: string) => {
-  const [, payload] = token.split(".");
+const menuItems = [
+  { name: "Dashboard", icon: LayoutDashboard },
+  { name: "Flights", icon: Plane },
+  { name: "Passengers", icon: Users },
+  { name: "Bookings", icon: Ticket },
+  { name: "Payments", icon: CreditCard },
+];
 
-  if (!payload) return null;
+const stats = [
+  {
+    title: "Total Flights",
+    value: "120",
+    note: "Sample dashboard data",
+    icon: Plane,
+  },
+  {
+    title: "Passengers",
+    value: "450",
+    note: "Sample dashboard data",
+    icon: Users,
+  },
+  {
+    title: "Bookings",
+    value: "210",
+    note: "Sample dashboard data",
+    icon: Ticket,
+  },
+  {
+    title: "Total Revenue",
+    value: "₱52,000",
+    note: "Sample dashboard data",
+    icon: CreditCard,
+  },
+];
 
-  const normalizedPayload = payload
-    .replace(/-/g, "+")
-    .replace(/_/g, "/")
-    .padEnd(Math.ceil(payload.length / 4) * 4, "=");
+const activities = [
+  {
+    activity: "Flight scheduled",
+    details: "Manila → Cebu",
+    status: "Scheduled",
+    type: "success",
+  },
+  {
+    activity: "New booking",
+    details: "Booking #BK-102",
+    status: "Confirmed",
+    type: "success",
+  },
+  {
+    activity: "Passenger registration",
+    details: "New passenger account",
+    status: "Pending",
+    type: "pending",
+  },
+  {
+    activity: "Payment received",
+    details: "Payment #PAY-204",
+    status: "Confirmed",
+    type: "success",
+  },
+];
 
+function getUsername(token: string) {
   try {
-    return JSON.parse(atob(normalizedPayload));
+    const payload = token.split(".")[1];
+
+    if (!payload) return null;
+
+    const normalized = payload
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+
+    const decoded = JSON.parse(atob(normalized));
+
+    return decoded;
   } catch {
     return null;
   }
-};
+}
 
-export default function Dashboard() {
+export default function DashboardPage() {
   const router = useRouter();
 
-  const [username] = useState(() => {
-    if (typeof window === "undefined") {
-      return "";
-    }
-
-    const token = localStorage.getItem("token");
-    if (!token) return "";
-
-    const payload = getJwtPayload(token);
-    return payload?.username || "";
-  });
+  const [username, setUsername] = useState("Administrator");
+  const [loading, setLoading] = useState(true);
+  const [activePage, setActivePage] = useState("Dashboard");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const checkAuth = () => {
+      const token = localStorage.getItem("token");
 
-    if (!token) {
-      router.push("/login");
-      return;
-    }
+      if (!token) {
+        router.replace("/login");
+        return;
+      }
 
-    const payload = getJwtPayload(token);
+      const payload = getUsername(token);
 
-    if (!payload?.username) {
-      localStorage.clear();
-      router.push("/login");
-    }
+      const expired =
+        !!payload?.exp &&
+        payload.exp * 1000 <= Date.now();
+
+      if (!payload?.username || expired) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
+        router.replace("/login");
+        return;
+      }
+
+      // Only update state if valid
+      setUsername(payload.username);
+      setLoading(false);
+    };
+
+    // Defer state update to avoid cascading renders
+    setTimeout(checkAuth, 0);
   }, [router]);
 
-  const logout = () => {
-    localStorage.clear();
-    router.push("/login");
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    router.replace("/login");
   };
 
+  if (loading) {
+    return (
+      <div className="fs-dashboard flex min-h-screen items-center justify-center">
+        <p className="text-sm text-gray-400">
+          Loading FlightSys...
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="fs-dashboard">
 
-      {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-screen w-64 border-r border-red-500/20 bg-zinc-950">
+      {/* TOP NAVIGATION */}
+      <header className="fs-topbar">
+        <div className="fs-brand">
+          <div className="fs-brand-icon">
+            <Plane size={23} />
+          </div>
 
-        <div className="p-6">
-
-          <h1 className="text-3xl font-bold text-red-500">
-            ✈ FlightSys
-          </h1>
-
-          <p className="mt-2 text-sm text-zinc-400">
-            Flight Reservation System
-          </p>
-
+          <div className="fs-brand-name">
+            FLIGHT<span>SYS</span>
+          </div>
         </div>
 
-        <nav className="mt-6 space-y-2 px-4">
+        <div className="fs-topbar-right">
+          <div className="fs-user-label">
+            Welcome,
+            <span className="fs-user-name">{username}</span>
+          </div>
 
-          <button className="w-full rounded-lg bg-red-600 px-4 py-3 text-left">
-            Dashboard
-          </button>
-
-          <button className="w-full rounded-lg px-4 py-3 text-left transition hover:bg-zinc-900">
-            Flights
-          </button>
-
-          <button className="w-full rounded-lg px-4 py-3 text-left transition hover:bg-zinc-900">
-            Passengers
-          </button>
-
-          <button className="w-full rounded-lg px-4 py-3 text-left transition hover:bg-zinc-900">
-            Bookings
-          </button>
-
-          <button className="w-full rounded-lg px-4 py-3 text-left transition hover:bg-zinc-900">
-            Payments
-          </button>
-
-        </nav>
-
-      </aside>
-
-      {/* Main Content */}
-      <main className="ml-64 p-8">
-
-        {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
-
-          <div>
-            <h2 className="text-4xl font-bold text-red-500">
-              Dashboard
-            </h2>
-
-            <p className="text-zinc-400">
-              Welcome, {username}
-            </p>
+          <div className="fs-avatar">
+            {String(username).charAt(0).toUpperCase()}
           </div>
 
           <button
-            onClick={logout}
-            className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 hover:bg-red-700"
+            className="fs-logout"
+            onClick={handleLogout}
           >
-            <LogOut size={18} />
+            <LogOut size={15} />
             Logout
           </button>
-
         </div>
+      </header>
 
-        {/* Hero */}
-        <div className="mb-8 rounded-3xl border border-red-500/20 bg-gradient-to-r from-red-950 via-zinc-950 to-black p-8">
+      {/* DASHBOARD CONTENT */}
+      <main className="fs-dashboard-content">
 
-          <h3 className="text-5xl font-bold text-white">
-            Airline Management
-          </h3>
-
-          <p className="mt-3 text-zinc-400">
-            Manage flights, passengers,
-            bookings and payments.
-          </p>
-
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-
-          <div className="rounded-2xl border border-red-500/20 bg-zinc-950 p-6 hover:border-red-500">
-
-            <Plane
-              size={40}
-              className="text-red-500"
-            />
-
-            <p className="mt-4 text-zinc-400">
-              Flights
-            </p>
-
-            <h3 className="mt-2 text-4xl font-bold">
-              120
-            </h3>
-
-          </div>
-
-          <div className="rounded-2xl border border-red-500/20 bg-zinc-950 p-6 hover:border-red-500">
-
-            <Users
-              size={40}
-              className="text-red-500"
-            />
-
-            <p className="mt-4 text-zinc-400">
-              Passengers
-            </p>
-
-            <h3 className="mt-2 text-4xl font-bold">
-              450
-            </h3>
-
-          </div>
-
-          <div className="rounded-2xl border border-red-500/20 bg-zinc-950 p-6 hover:border-red-500">
-
-            <Ticket
-              size={40}
-              className="text-red-500"
-            />
-
-            <p className="mt-4 text-zinc-400">
-              Bookings
-            </p>
-
-            <h3 className="mt-2 text-4xl font-bold">
-              210
-            </h3>
-
-          </div>
-
-          <div className="rounded-2xl border border-red-500/20 bg-zinc-950 p-6 hover:border-red-500">
-
-            <CreditCard
-              size={40}
-              className="text-red-500"
-            />
-
-            <p className="mt-4 text-zinc-400">
-              Revenue
-            </p>
-
-            <h3 className="mt-2 text-4xl font-bold">
-              ₱52,000
-            </h3>
-
-          </div>
-
-        </div>
-
-        {/* Recent Activity */}
-        <div className="mt-8 rounded-2xl border border-red-500/20 bg-zinc-950 p-6">
-
-          <h3 className="mb-5 text-2xl font-bold text-red-500">
-            Recent Activity
-          </h3>
-
-          <div className="space-y-3">
-
-            <div className="rounded-lg bg-zinc-900 p-4">
-              ✅ New booking created
+        {/* PAGE HEADING */}
+        <section className="fs-dashboard-heading">
+          <div>
+            <div className="fs-eyebrow">
+              <span className="fs-eyebrow-dot" />
+              YOUR AIRLINE MANAGEMENT SYSTEM
             </div>
 
-            <div className="rounded-lg bg-zinc-900 p-4">
-              ✅ Passenger registered
-            </div>
+            <h1 className="fs-dashboard-title">
+              Welcome <span>Back.</span>
+            </h1>
 
-            <div className="rounded-lg bg-zinc-900 p-4">
-              ✅ Flight schedule updated
-            </div>
-
-            <div className="rounded-lg bg-zinc-900 p-4">
-              ✅ Payment received
-            </div>
-
+            <p className="fs-dashboard-subtitle">
+              Manage your flights, passengers, bookings, and payments
+              <br className="hidden sm:block" />
+              all in one place with FlightSys.
+            </p>
           </div>
 
-        </div>
+          <div className="fs-date-label">
+            <CalendarDays
+              size={15}
+              style={{
+                display: "inline",
+                marginRight: "8px",
+                verticalAlign: "middle",
+              }}
+            />
+            FlightSys Dashboard
+          </div>
+        </section>
 
+        {/* NAVIGATION */}
+        <nav className="mb-7 flex flex-wrap items-center gap-2">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const active = activePage === item.name;
+
+            return (
+              <button
+                key={item.name}
+                onClick={() => setActivePage(item.name)}
+                className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-xs font-bold transition ${
+                  active
+                    ? "border-red-500 bg-red-500 text-white"
+                    : "border-white/10 bg-white/[0.03] text-gray-400 hover:border-red-500/40 hover:text-white"
+                }`}
+              >
+                <Icon size={15} />
+                {item.name}
+              </button>
+            );
+          })}
+        </nav>
+
+        {activePage === "Dashboard" ? (
+          <>
+            {/* STATISTICS */}
+            <section className="fs-stats-grid">
+              {stats.map((stat) => {
+                const Icon = stat.icon;
+
+                return (
+                  <div className="fs-stat-card" key={stat.title}>
+                    <div className="fs-stat-top">
+                      <span className="fs-stat-label">
+                        {stat.title}
+                      </span>
+
+                      <div className="fs-stat-icon">
+                        <Icon size={20} />
+                      </div>
+                    </div>
+
+                    <div className="fs-stat-value">
+                      {stat.value}
+                    </div>
+
+                    <p className="fs-stat-note">
+                      {stat.note}
+                    </p>
+                  </div>
+                );
+              })}
+            </section>
+
+            {/* MAIN DASHBOARD GRID */}
+            <section className="fs-dashboard-grid">
+
+              {/* RECENT ACTIVITY */}
+              <div className="fs-panel">
+                <div className="fs-panel-header">
+                  <div>
+                    <h2 className="fs-panel-title">
+                      Recent Activity
+                    </h2>
+                    <p className="fs-panel-description">
+                      Latest airline management activities
+                    </p>
+                  </div>
+
+                  <span className="fs-panel-action">
+                    ACTIVITY
+                  </span>
+                </div>
+
+                <div className="fs-table-wrap">
+                  <table className="fs-table">
+                    <thead>
+                      <tr>
+                        <th>Activity</th>
+                        <th>Details</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {activities.map((item, index) => (
+                        <tr key={index}>
+                          <td>{item.activity}</td>
+                          <td>{item.details}</td>
+                          <td>
+                            <span
+                              className={`fs-status ${
+                                item.type === "success"
+                                  ? "fs-status-success"
+                                  : "fs-status-pending"
+                              }`}
+                            >
+                              {item.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* SIDE INFORMATION */}
+              <div className="fs-side-stack">
+
+                <div className="fs-panel">
+                  <div className="fs-panel-header">
+                    <div>
+                      <h2 className="fs-panel-title">
+                        Quick Information
+                      </h2>
+                      <p className="fs-panel-description">
+                        System overview
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="fs-info-list">
+                    <div className="fs-info-row">
+                      <div className="fs-info-left">
+                        <div className="fs-info-icon">
+                          <Plane size={16} />
+                        </div>
+                        Flight Schedule
+                      </div>
+                      <span className="fs-info-value">120</span>
+                    </div>
+
+                    <div className="fs-info-row">
+                      <div className="fs-info-left">
+                        <div className="fs-info-icon">
+                          <Users size={16} />
+                        </div>
+                        Passengers
+                      </div>
+                      <span className="fs-info-value">450</span>
+                    </div>
+
+                    <div className="fs-info-row">
+                      <div className="fs-info-left">
+                        <div className="fs-info-icon">
+                          <Ticket size={16} />
+                        </div>
+                        Bookings
+                      </div>
+                      <span className="fs-info-value">210</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="fs-panel fs-system-card">
+                  <div className="fs-system-heading">
+                    <span className="fs-system-indicator" />
+                    System Information
+                  </div>
+
+                  <p className="fs-system-text">
+                    <ShieldCheck
+                      size={14}
+                      style={{
+                        display: "inline",
+                        marginRight: "7px",
+                        verticalAlign: "middle",
+                      }}
+                    />
+                    You are signed in as {username}.
+                  </p>
+
+                  <p className="fs-system-text">
+                    <Globe2
+                      size={14}
+                      style={{
+                        display: "inline",
+                        marginRight: "7px",
+                        verticalAlign: "middle",
+                      }}
+                    />
+                    FlightSys management interface.
+                  </p>
+
+                  <p className="fs-system-text">
+                    <Clock
+                      size={14}
+                      style={{
+                        display: "inline",
+                        marginRight: "7px",
+                        verticalAlign: "middle",
+                      }}
+                    />
+                    Dashboard session active.
+                  </p>
+                </div>
+              </div>
+            </section>
+          </>
+        ) : (
+          <section className="fs-panel fs-dashboard-empty">
+            {(() => {
+              const selected = menuItems.find(
+                (item) => item.name === activePage
+              );
+
+              const Icon = selected?.icon || LayoutDashboard;
+
+              return (
+                <Icon
+                  size={42}
+                  style={{
+                    color: "#ff2442",
+                    margin: "0 auto 18px",
+                  }}
+                />
+              );
+            })()}
+
+            <h2>{activePage}</h2>
+
+            <p>
+              The {activePage.toLowerCase()} module is ready for
+              development. Backend integration is still needed.
+            </p>
+
+            <button
+              className="fs-back-button"
+              onClick={() => setActivePage("Dashboard")}
+            >
+              Back to Dashboard
+              <ArrowUpRight
+                size={14}
+                style={{
+                  display: "inline",
+                  marginLeft: "7px",
+                  verticalAlign: "middle",
+                }}
+              />
+            </button>
+          </section>
+        )}
+
+        {/* FOOTER */}
+        <footer className="fs-footer">
+          <p>© 2026 FlightSys. All rights reserved.</p>
+          <p>Airline Management System</p>
+        </footer>
       </main>
     </div>
   );
