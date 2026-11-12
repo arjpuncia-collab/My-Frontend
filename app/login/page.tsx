@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -16,13 +15,6 @@ import {
   Loader2,
 } from "lucide-react";
 
-type DemoUser = {
-  username: string;
-  password: string;
-  role: string;
-  createdAt: string;
-};
-
 export default function LoginPage() {
   const router = useRouter();
 
@@ -32,75 +24,94 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleLogin = async (
-    e: FormEvent<HTMLFormElement>
-  ) => {
+  // If a token is already stored, skip the login screen
+  useEffect(() => {
+    if (localStorage.getItem("token")) {
+      router.prefetch("/dashboard");
+    }
+  }, [router]);
+
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (loading) return;
 
     setError("");
 
-    if (!username.trim() || !password) {
+    const cleanUsername = username.trim();
+
+    if (!cleanUsername || !password) {
       setError("Please enter your username and password.");
+      return;
+    }
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+    if (!API_URL) {
+      setError("Backend API URL is not configured.");
       return;
     }
 
     setLoading(true);
 
     try {
-      // FRONTEND DEMO LOGIN ONLY
-
-      await new Promise((resolve) =>
-        setTimeout(resolve, 700)
+      const response = await fetch(
+        `${API_URL.replace(/\/+$/, "")}/auth/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: cleanUsername,
+            password,
+          }),
+        }
       );
 
-      const storedUsers: DemoUser[] = JSON.parse(
-        localStorage.getItem("flightsys_demo_users") || "[]"
-      );
+      const result = await response.json().catch(() => null);
 
-      const user = storedUsers.find(
-        (item) =>
-          item.username.toLowerCase() ===
-            username.trim().toLowerCase() &&
-          item.password === password
-      );
-
-      if (!user) {
-        throw new Error(
-          "Invalid username or password."
-        );
+      if (!response.ok) {
+        const message = Array.isArray(result?.message)
+          ? result.message.join(", ")
+          : result?.message || result?.error || "Login failed";
+        throw new Error(message);
       }
 
-      // Create demo session
-      const demoSession = {
-        username: user.username,
-        role: user.role,
-        loginAt: new Date().toISOString(),
-        demo: true,
-      };
+      const accessToken =
+        result?.accessToken || result?.access_token || result?.token;
 
-      localStorage.setItem(
-        "flightsys_demo_session",
-        JSON.stringify(demoSession)
-      );
+      if (!accessToken) {
+        throw new Error("Invalid login response from backend.");
+      }
 
-      // Demo token only. Not a real JWT.
-      localStorage.setItem(
-        "token",
-        "FLIGHTSYS-DEMO-SESSION"
-      );
+      const refreshToken = result?.refreshToken || result?.refresh_token;
 
+      // Clear any old session first, then store the new one
+      localStorage.removeItem("token");
+      localStorage.removeItem("refresh_token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("flightsys_demo_session");
+
+      localStorage.setItem("token", accessToken);
+
+      if (refreshToken) {
+        localStorage.setItem("refresh_token", refreshToken);
+      }
+
+      // The dashboard re-derives the real user from the token
       localStorage.setItem(
         "user",
-        JSON.stringify(demoSession)
+        JSON.stringify(result?.user ?? { username: cleanUsername })
       );
 
-      router.push("/dashboard");
-
+      router.replace("/dashboard");
     } catch (err) {
+      console.error(err);
       setError(
-        err instanceof Error
+        err instanceof TypeError
+          ? "Cannot connect to the backend server."
+          : err instanceof Error
           ? err.message
-          : "Login failed."
+          : "Unable to sign in. Please try again."
       );
     } finally {
       setLoading(false);
@@ -109,14 +120,12 @@ export default function LoginPage() {
 
   return (
     <div className="fs-page">
-
       <div className="fs-bg-glow fs-glow-left" />
       <div className="fs-bg-glow fs-glow-right" />
       <div className="fs-bg-grid" />
 
       {/* NAVBAR */}
       <nav className="fs-navbar">
-
         <Link href="/" className="fs-brand">
           <span className="fs-brand-icon">
             <Plane size={23} />
@@ -134,15 +143,12 @@ export default function LoginPage() {
             Create Account <ArrowRight size={15} />
           </Link>
         </div>
-
       </nav>
 
       {/* MAIN CONTENT */}
       <main className="fs-main">
-
         {/* LEFT HERO */}
         <section className="fs-hero">
-
           <div className="fs-eyebrow">
             <Plane size={14} />
             YOUR JOURNEY CONTINUES HERE
@@ -155,14 +161,12 @@ export default function LoginPage() {
           </h1>
 
           <p className="fs-description">
-            Your next destination is waiting.
-            Sign in to manage your flights and
-            continue your seamless travel experience
-            with FlightSys.
+            Your next destination is waiting. Sign in to manage your flights
+            and continue your seamless travel experience with FlightSys.
           </p>
 
+          {/* FLIGHT VISUAL */}
           <div className="fs-flight-visual">
-
             <div className="fs-visual-glow" />
             <div className="fs-orbit fs-orbit-one" />
             <div className="fs-orbit fs-orbit-two" />
@@ -171,20 +175,16 @@ export default function LoginPage() {
               <Plane size={100} strokeWidth={1.2} />
             </div>
 
-            <Globe2
-              className="fs-visual-globe"
-              size={25}
-            />
+            <Globe2 className="fs-visual-globe" size={25} />
 
             <div className="fs-visual-caption">
               <span>FLIGHTSYS EXPERIENCE</span>
               <h3>Your journey starts here.</h3>
             </div>
-
           </div>
 
+          {/* FEATURES */}
           <div className="fs-features">
-
             <div className="fs-feature">
               <ShieldCheck size={25} />
 
@@ -202,104 +202,67 @@ export default function LoginPage() {
                 <span>Your journey awaits</span>
               </div>
             </div>
-
           </div>
-
         </section>
 
         {/* LOGIN FORM */}
         <section className="fs-register-area">
-
           <div className="fs-register-card">
-
             <div className="fs-card-accent" />
 
             <div className="fs-form-heading">
-
               <div className="fs-form-icon">
                 <User size={25} />
               </div>
 
-              <span className="fs-form-label">
-                WELCOME BACK
-              </span>
+              <span className="fs-form-label">WELCOME BACK</span>
 
               <h2>Sign In.</h2>
 
-              <p>
-                Enter your credentials to access your account.
-              </p>
-
+              <p>Enter your credentials to access your account.</p>
             </div>
 
-            <form
-              className="fs-form"
-              onSubmit={handleLogin}
-            >
-
+            <form className="fs-form" onSubmit={handleLogin}>
+              {/* ERROR MESSAGE */}
               {error && (
-                <div
-                  role="alert"
-                  className="fs-match fs-match-error"
-                >
+                <div role="alert" className="fs-match fs-match-error">
                   {error}
                 </div>
               )}
 
               {/* USERNAME */}
               <div className="fs-field">
-
-                <label htmlFor="login-username">
-                  Username
-                </label>
+                <label htmlFor="login-username">Username</label>
 
                 <div className="fs-input-box">
-
-                  <User
-                    className="fs-input-icon"
-                    size={19}
-                  />
+                  <User className="fs-input-icon" size={19} />
 
                   <input
                     id="login-username"
                     type="text"
                     placeholder="Enter your username"
                     value={username}
-                    onChange={(e) =>
-                      setUsername(e.target.value)
-                    }
+                    onChange={(e) => setUsername(e.target.value)}
                     autoComplete="username"
+                    maxLength={50}
                     required
                   />
-
                 </div>
-
               </div>
 
               {/* PASSWORD */}
               <div className="fs-field">
-
-                <label htmlFor="login-password">
-                  Password
-                </label>
+                <label htmlFor="login-password">Password</label>
 
                 <div className="fs-input-box">
-
-                  <LockKeyhole
-                    className="fs-input-icon"
-                    size={19}
-                  />
+                  <LockKeyhole className="fs-input-icon" size={19} />
 
                   <input
                     id="login-password"
-                    type={
-                      showPassword ? "text" : "password"
-                    }
+                    type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     value={password}
-                    onChange={(e) =>
-                      setPassword(e.target.value)
-                    }
+                    onChange={(e) => setPassword(e.target.value)}
                     autoComplete="current-password"
                     required
                   />
@@ -307,24 +270,14 @@ export default function LoginPage() {
                   <button
                     type="button"
                     className="fs-eye"
-                    onClick={() =>
-                      setShowPassword(!showPassword)
-                    }
+                    onClick={() => setShowPassword((prev) => !prev)}
                     aria-label={
-                      showPassword
-                        ? "Hide password"
-                        : "Show password"
+                      showPassword ? "Hide password" : "Show password"
                     }
                   >
-                    {showPassword ? (
-                      <EyeOff size={19} />
-                    ) : (
-                      <Eye size={19} />
-                    )}
+                    {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
                   </button>
-
                 </div>
-
               </div>
 
               {/* LOGIN BUTTON */}
@@ -333,13 +286,9 @@ export default function LoginPage() {
                 className="fs-submit"
                 disabled={loading}
               >
-
                 {loading ? (
                   <>
-                    <Loader2
-                      size={18}
-                      className="animate-spin"
-                    />
+                    <Loader2 size={18} className="animate-spin" />
                     Signing In...
                   </>
                 ) : (
@@ -348,30 +297,21 @@ export default function LoginPage() {
                     <ArrowRight size={18} />
                   </>
                 )}
-
               </button>
-
             </form>
 
             {/* FOOTER */}
             <div className="fs-card-footer">
               Don&apos;t have an account?
-
-              <Link href="/register">
-                Create Account
-              </Link>
+              <Link href="/register">Create Account</Link>
             </div>
-
           </div>
 
           <p className="fs-copyright">
             © 2026 FlightSys. All rights reserved.
           </p>
-
         </section>
-
       </main>
-
     </div>
   );
 }

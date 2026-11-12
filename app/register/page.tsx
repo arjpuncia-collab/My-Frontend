@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type SubmitEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   Plane,
@@ -23,39 +23,54 @@ export default function RegisterPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // PASSWORD STRENGTH
   const getStrength = () => {
-    if (!password) return { label: "Not entered", score: 0 };
+    if (!password) {
+      return { label: "Not entered", score: 0 };
+    }
 
     let score = 0;
+
     if (password.length >= 8) score++;
     if (/[A-Z]/.test(password)) score++;
     if (/[0-9]/.test(password)) score++;
     if (/[^A-Za-z0-9]/.test(password)) score++;
 
-    if (score <= 1) return { label: "Weak", score: 1 };
-    if (score <= 2) return { label: "Medium", score: 2 };
+    if (score <= 1) {
+      return { label: "Weak", score: 1 };
+    }
+
+    if (score <= 2) {
+      return { label: "Medium", score: 2 };
+    }
 
     return { label: "Strong", score: 3 };
   };
 
   const strength = getStrength();
 
+  // REGISTER ACCOUNT
   const handleRegister = async (
-    e: SubmitEvent<HTMLFormElement>
+    e: FormEvent<HTMLFormElement>
   ) => {
     e.preventDefault();
+
+    if (loading) return;
 
     setError("");
     setSuccess("");
 
     const cleanUsername = username.trim();
 
+    // USERNAME VALIDATION
     if (!cleanUsername) {
       setError("Username is required.");
       return;
@@ -66,6 +81,12 @@ export default function RegisterPage() {
       return;
     }
 
+    if (cleanUsername.length > 50) {
+      setError("Username must not exceed 50 characters.");
+      return;
+    }
+
+    // PASSWORD VALIDATION
     if (password.length < 8) {
       setError("Password must be at least 8 characters.");
       return;
@@ -76,6 +97,7 @@ export default function RegisterPage() {
       return;
     }
 
+    // API CONFIGURATION
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
     if (!API_URL) {
@@ -100,14 +122,22 @@ export default function RegisterPage() {
         }
       );
 
-      const data = await response.json().catch(() => ({}));
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        const errorMessage = Array.isArray(data.message)
-          ? data.message.join(", ")
-          : data.message || data.error || "Registration failed.";
+        if (response.status === 409) {
+          throw new Error(
+            "Username already exists. Please choose another username."
+          );
+        }
 
-        throw new Error(errorMessage);
+        const message = Array.isArray(data?.message)
+          ? data.message.join(", ")
+          : data?.message || data?.error;
+
+        throw new Error(
+          message || `Registration failed (${response.status}).`
+        );
       }
 
       setSuccess(
@@ -118,16 +148,20 @@ export default function RegisterPage() {
       setPassword("");
       setConfirmPassword("");
 
-      setTimeout(() => {
-        router.push("/login");
-      }, 1200);
+      router.push("/login");
 
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Cannot connect to the backend server."
-      );
+      if (err instanceof TypeError) {
+        setError(
+          "Cannot connect to the backend server. Please try again."
+        );
+      } else {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Something went wrong during registration."
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -140,24 +174,33 @@ export default function RegisterPage() {
       <div className="fs-bg-glow fs-glow-right" />
       <div className="fs-bg-grid" />
 
+      {/* NAVBAR */}
       <header className="fs-navbar">
+
         <Link href="/" className="fs-brand">
           <span className="fs-brand-icon">
             <Plane size={23} />
           </span>
-          <span>FLIGHT<span>SYS</span></span>
+
+          <span>
+            FLIGHT<span>SYS</span>
+          </span>
         </Link>
 
         <div className="fs-nav-login">
           <span>Already a member?</span>
+
           <Link href="/login">
             Sign in <ArrowRight size={15} />
           </Link>
         </div>
+
       </header>
 
+      {/* MAIN CONTENT */}
       <section className="fs-main">
 
+        {/* LEFT HERO SECTION */}
         <div className="fs-hero">
 
           <div className="fs-eyebrow">
@@ -177,8 +220,11 @@ export default function RegisterPage() {
             begins with FlightSys.
           </p>
 
+          {/* FLIGHT VISUAL */}
           <div className="fs-flight-visual">
+
             <div className="fs-visual-glow" />
+
             <div className="fs-orbit fs-orbit-one" />
             <div className="fs-orbit fs-orbit-two" />
 
@@ -197,12 +243,15 @@ export default function RegisterPage() {
               <span>FLIGHTSYS EXPERIENCE</span>
               <h3>Travel without limits.</h3>
             </div>
+
           </div>
 
+          {/* FEATURES */}
           <div className="fs-features">
 
             <div className="fs-feature">
               <ShieldCheck size={23} />
+
               <div>
                 <strong>Secure Access</strong>
                 <span>Account protection</span>
@@ -211,6 +260,7 @@ export default function RegisterPage() {
 
             <div className="fs-feature">
               <Globe2 size={23} />
+
               <div>
                 <strong>Explore More</strong>
                 <span>Your journey awaits</span>
@@ -218,14 +268,17 @@ export default function RegisterPage() {
             </div>
 
           </div>
+
         </div>
 
+        {/* REGISTER FORM */}
         <div className="fs-register-area">
 
           <div className="fs-register-card">
 
             <div className="fs-card-accent" />
 
+            {/* FORM HEADING */}
             <div className="fs-form-heading">
 
               <div className="fs-form-icon">
@@ -237,6 +290,7 @@ export default function RegisterPage() {
               </span>
 
               <h2>Join FlightSys.</h2>
+
               <p>Start your journey with us today.</p>
 
             </div>
@@ -246,25 +300,36 @@ export default function RegisterPage() {
               className="fs-form"
             >
 
+              {/* ERROR MESSAGE */}
               {error && (
-                <div role="alert" className="fs-match fs-match-error">
+                <div
+                  role="alert"
+                  className="fs-match fs-match-error"
+                >
                   {error}
                 </div>
               )}
 
+              {/* SUCCESS MESSAGE */}
               {success && (
-                <div role="status" className="fs-match fs-match-success">
+                <div
+                  role="status"
+                  className="fs-match fs-match-success"
+                >
                   <CheckCircle2 size={16} />
                   {success}
                 </div>
               )}
 
+              {/* USERNAME */}
               <div className="fs-field">
+
                 <label htmlFor="fs-username">
                   Username
                 </label>
 
                 <div className="fs-input-box">
+
                   <User
                     className="fs-input-icon"
                     size={18}
@@ -279,17 +344,24 @@ export default function RegisterPage() {
                       setUsername(e.target.value)
                     }
                     autoComplete="username"
+                    minLength={3}
+                    maxLength={50}
                     required
                   />
+
                 </div>
+
               </div>
 
+              {/* PASSWORD */}
               <div className="fs-field">
+
                 <label htmlFor="fs-password">
                   Password
                 </label>
 
                 <div className="fs-input-box">
+
                   <Lock
                     className="fs-input-icon"
                     size={18}
@@ -304,6 +376,7 @@ export default function RegisterPage() {
                       setPassword(e.target.value)
                     }
                     autoComplete="new-password"
+                    minLength={8}
                     required
                   />
 
@@ -311,7 +384,7 @@ export default function RegisterPage() {
                     type="button"
                     className="fs-eye"
                     onClick={() =>
-                      setShowPassword(!showPassword)
+                      setShowPassword((prev) => !prev)
                     }
                     aria-label="Toggle password visibility"
                   >
@@ -319,9 +392,12 @@ export default function RegisterPage() {
                       ? <EyeOff size={19} />
                       : <Eye size={19} />}
                   </button>
+
                 </div>
 
+                {/* PASSWORD STRENGTH */}
                 <div className="fs-strength-info">
+
                   <span>Password strength</span>
 
                   <span
@@ -329,9 +405,11 @@ export default function RegisterPage() {
                   >
                     {strength.label}
                   </span>
+
                 </div>
 
                 <div className="fs-strength-track">
+
                   <div
                     className={`fs-strength-fill strength-bar-${strength.score}`}
                     style={{
@@ -345,15 +423,20 @@ export default function RegisterPage() {
                           : "100%",
                     }}
                   />
+
                 </div>
+
               </div>
 
+              {/* CONFIRM PASSWORD */}
               <div className="fs-field">
+
                 <label htmlFor="fs-confirm">
                   Confirm Password
                 </label>
 
                 <div className="fs-input-box">
+
                   <Lock
                     className="fs-input-icon"
                     size={18}
@@ -375,7 +458,7 @@ export default function RegisterPage() {
                     type="button"
                     className="fs-eye"
                     onClick={() =>
-                      setShowConfirm(!showConfirm)
+                      setShowConfirm((prev) => !prev)
                     }
                     aria-label="Toggle confirm password visibility"
                   >
@@ -383,8 +466,10 @@ export default function RegisterPage() {
                       ? <EyeOff size={19} />
                       : <Eye size={19} />}
                   </button>
+
                 </div>
 
+                {/* PASSWORD MATCH */}
                 {confirmPassword && (
                   <div
                     className={
@@ -393,20 +478,25 @@ export default function RegisterPage() {
                         : "fs-match fs-match-error"
                     }
                   >
+
                     <CheckCircle2 size={14} />
 
                     {password === confirmPassword
                       ? "Passwords match"
                       : "Passwords do not match"}
+
                   </div>
                 )}
+
               </div>
 
+              {/* SUBMIT */}
               <button
                 type="submit"
                 className="fs-submit"
                 disabled={loading}
               >
+
                 {loading ? (
                   "Creating Account..."
                 ) : (
@@ -415,12 +505,15 @@ export default function RegisterPage() {
                     <ArrowRight size={18} />
                   </>
                 )}
+
               </button>
 
             </form>
 
+            {/* FOOTER */}
             <div className="fs-card-footer">
               Already have an account?
+
               <Link href="/login">
                 Sign In
               </Link>
@@ -435,6 +528,7 @@ export default function RegisterPage() {
         </div>
 
       </section>
+
     </main>
   );
 }
