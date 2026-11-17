@@ -48,20 +48,30 @@ function LoginFormContent() {
     setLoading(true);
 
     try {
-      const systemUsers = JSON.parse(localStorage.getItem("flightsys:users") || "[]");
+      const systemUsers: { username: string; password: string; role: string }[] = JSON.parse(
+        localStorage.getItem("flightsys:users") || "[]"
+      );
+      if (!Array.isArray(systemUsers)) {
+        throw new Error("Invalid user data");
+      }
+
       const foundUser = systemUsers.find(
-        (u: { username: string; password?: string; role: string }) =>
+        (u) =>
+          typeof u.username === "string" &&
           u.username.toLowerCase() === username.trim().toLowerCase() &&
-          (!u.password || u.password === password)
+          typeof u.password === "string" &&
+          u.password === password
       );
 
-      if (foundUser || username.trim().toLowerCase() === "admin") {
+      if (foundUser) {
         const sessionUser = {
-          username: foundUser ? foundUser.username : username.trim(),
-          role: foundUser ? foundUser.role : "admin",
+          username: foundUser.username,
+          role: foundUser.role,
         };
+        const secureAccessToken = crypto.randomUUID();
         localStorage.setItem("flightsys:activeUser", JSON.stringify(sessionUser));
         localStorage.setItem("skyline:activeUser", JSON.stringify(sessionUser));
+        localStorage.setItem("flightsys:token", secureAccessToken);
         router.push("/dashboard");
         return;
       }

@@ -126,14 +126,12 @@ export default function FlightSysFullDashboard() {
   const [currentUser, setCurrentUser] = useState<{ username: string; role: string } | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("Dashboard");
 
-  // UI & Filter States
   const [toast, setToast] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Booking | null>(null);
 
-  // --- DATA STATES ---
   const [flights, setFlights] = useState<Flight[]>([]);
   const [passengers, setPassengers] = useState<Passenger[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -143,10 +141,8 @@ export default function FlightSysFullDashboard() {
     { id: 1, method: "GET", module: "System", description: "System ready. All modules loaded.", timestamp: "Just now" },
   ]);
 
-  // --- EDITING TRACKER ---
   const [editId, setEditId] = useState<number | string | null>(null);
 
-  // --- FORM STATES: FLIGHTS ---
   const [flightNumber, setFlightNumber] = useState("");
   const [route, setRoute] = useState("Manila → Cebu");
   const [departure, setDeparture] = useState("");
@@ -155,27 +151,23 @@ export default function FlightSysFullDashboard() {
   const [seats, setSeats] = useState("180");
   const [basePrice, setBasePrice] = useState("4500");
 
-  // --- FORM STATES: PASSENGERS ---
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [passportNo, setPassportNo] = useState("");
   const [nationality, setNationality] = useState("Filipino");
 
-  // --- FORM STATES: BOOKINGS ---
   const [bookingPassenger, setBookingPassenger] = useState("");
   const [bookingFlight, setBookingFlight] = useState("SK-802");
   const [seatNo, setSeatNo] = useState("14B");
   const [seatClass, setSeatClass] = useState<Booking["seatClass"]>("Economy");
   const [bookingStatus, setBookingStatus] = useState<Booking["status"]>("Confirmed");
 
-  // --- FORM STATES: PAYMENTS ---
   const [payBookingRef, setPayBookingRef] = useState("");
   const [payAmount, setPayAmount] = useState("");
   const [payMethod, setPayMethod] = useState<Payment["method"]>("GCash");
   const [payStatus, setPayStatus] = useState<Payment["status"]>("Paid");
 
-  // --- FORM STATES: USERS ---
   const [newUsername, setNewUsername] = useState("");
   const [tempPassword, setTempPassword] = useState("");
   const [newRole, setNewRole] = useState<SystemUser["role"]>("user");
@@ -190,16 +182,19 @@ export default function FlightSysFullDashboard() {
     setAuditLogs((prev) => [{ id: Date.now(), method, module, description, timestamp: now }, ...prev.slice(0, 14)]);
   };
 
-  // --- STRICT AUTH GUARD + REAL-TIME REGISTER SYNC ---
   useEffect(() => {
-    const active = localStorage.getItem("flightsys:activeUser") || localStorage.getItem("skyline:activeUser");
-    if (!active) {
+    // Kunin ang active user at ang access token
+    const activeUser = localStorage.getItem("flightsys:activeUser");
+    const accessToken = localStorage.getItem("flightsys:token");
+
+    // Kapag walang token o walang user, harangin at ibalik sa login page
+    if (!accessToken || !activeUser) {
       router.replace("/login");
       return;
     }
 
     try {
-      setCurrentUser(JSON.parse(active));
+      setCurrentUser(JSON.parse(activeUser));
     } catch {
       router.replace("/login");
       return;
@@ -331,7 +326,6 @@ export default function FlightSysFullDashboard() {
     setTimeout(() => setIsRefreshing(false), 350);
   };
 
-  // --- RESET DEMO DATABASE ---
   const handleResetDemoData = () => {
     if (!confirm("Reset all demo records back to default sample data?")) return;
     localStorage.setItem("flightsys:flights", JSON.stringify(DEFAULT_FLIGHTS));
@@ -348,7 +342,6 @@ export default function FlightSysFullDashboard() {
     notify("Demo database restored to defaults!");
   };
 
-  // --- CSV EXPORT UTILITY ---
   const exportToCSV = (filename: string, rows: Record<string, unknown>[]) => {
     if (!rows.length) {
       notify("No records available to export.", "err");
@@ -374,7 +367,6 @@ export default function FlightSysFullDashboard() {
     notify(`Exported ${filename}.csv`);
   };
 
-  // --- GENERIC CRUD HELPERS (POST, PUT, DELETE) ---
   async function saveRecord<T extends BaseRecord>(
     endpoint: string,
     storageKey: string,
@@ -457,7 +449,6 @@ export default function FlightSysFullDashboard() {
     notify("Record removed.");
   }
 
-  // --- QUICK STATUS TOGGLE (ONE-CLICK PUT) ---
   const cycleFlightStatus = async (flight: Flight) => {
     const order: Flight["status"][] = ["On Time", "Boarding", "Delayed"];
     const nextStatus = order[(order.indexOf(flight.status) + 1) % order.length];
@@ -548,7 +539,6 @@ export default function FlightSysFullDashboard() {
     }
   };
 
-  // --- SUBMIT HANDLERS PER MODULE ---
   const handleFlightSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!flightNumber || !departure) return;
@@ -661,7 +651,6 @@ export default function FlightSysFullDashboard() {
     resetForms();
   };
 
-  // Auto-calculate payment amount when selecting a booking reference
   const handleSelectBookingForPayment = (ref: string) => {
     setPayBookingRef(ref);
     const foundBooking = bookings.find((b) => (b.bookingRef || "").toLowerCase() === ref.toLowerCase());
@@ -674,7 +663,6 @@ export default function FlightSysFullDashboard() {
     }
   };
 
-  // --- SAFE FILTERED DATA ---
   const filteredFlights = useMemo(() => {
     const q = (searchQuery || "").toLowerCase();
     return flights.filter((f) => {
@@ -734,6 +722,7 @@ export default function FlightSysFullDashboard() {
   const handleLogout = () => {
     localStorage.removeItem("flightsys:activeUser");
     localStorage.removeItem("skyline:activeUser");
+    localStorage.removeItem("flightsys:token");
     router.push("/login");
   };
 
@@ -759,7 +748,6 @@ export default function FlightSysFullDashboard() {
     <div className="fs-page" onMouseMove={handleMouseMove}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
 
-      {/* Background Layers */}
       <div
         className="fs-spotlight"
         aria-hidden="true"
@@ -770,7 +758,6 @@ export default function FlightSysFullDashboard() {
       <div className="fs-orb fs-orb-left" aria-hidden="true" />
       <div className="fs-grid-bg" aria-hidden="true" />
 
-      {/* TOP BAR */}
       <header className="fs-header">
         <div className="fs-brand">
           <span className="fs-brand-icon">
@@ -817,10 +804,8 @@ export default function FlightSysFullDashboard() {
         </div>
       </header>
 
-      {/* MAIN CONTENT */}
       <main className="fs-main">
         <div className="fs-container">
-          {/* WORKFLOW STEPPER BAR */}
           <div className="fs-top-controls">
             <nav className="fs-stepper" aria-label="System Modules">
               <button
@@ -903,19 +888,14 @@ export default function FlightSysFullDashboard() {
             </nav>
           </div>
 
-          {/* TOAST NOTIFICATION */}
           {toast && (
             <div className={`fs-toast ${toast.type === "ok" ? "is-ok" : "is-err"}`}>
               {toast.text}
             </div>
           )}
 
-          {/* ============================================================== */}
-          {/* VIEW 0: DASHBOARD OVERVIEW                                     */}
-          {/* ============================================================== */}
           {activeTab === "Dashboard" && (
             <div className="fs-anim">
-              {/* WELCOME BACK HERO HEADER */}
               <div className="fs-welcome-hero">
                 <div className="fs-welcome-left">
                   <div className="fs-pill-badge">
@@ -942,7 +922,6 @@ export default function FlightSysFullDashboard() {
                 </div>
               </div>
 
-              {/* LIVE METRICS SUMMARY */}
               <div className="fs-stats-grid">
                 <div className="fs-stat-card" onClick={() => handleTabSwitch("Flights")}>
                   <span className="fs-kicker">01 • SCHEDULE</span>
@@ -971,7 +950,6 @@ export default function FlightSysFullDashboard() {
                 </div>
               </div>
 
-              {/* HOW FLIGHTSYS WORKS (SYSTEM WORKFLOW GUIDE) */}
               <div className="fs-guide-box">
                 <div className="fs-guide-header">
                   <div>
@@ -1031,7 +1009,6 @@ export default function FlightSysFullDashboard() {
               </div>
 
               <div className="fs-dash-bottom">
-                {/* LIVE BOOKINGS SUMMARY */}
                 <div className="fs-card">
                   <div className="fs-card-header-row">
                     <div>
@@ -1089,7 +1066,6 @@ export default function FlightSysFullDashboard() {
                   </div>
                 </div>
 
-                {/* LIVE ACTIVITY TRAIL */}
                 <div className="fs-card">
                   <span className="fs-kicker">SYSTEM TELEMETRY</span>
                   <h2 className="fs-card-title">Recent Activity Log</h2>
@@ -1112,9 +1088,6 @@ export default function FlightSysFullDashboard() {
             </div>
           )}
 
-          {/* ============================================================== */}
-          {/* VIEW 1: FLIGHTS CRUD                                           */}
-          {/* ============================================================== */}
           {activeTab === "Flights" && (
             <div className="fs-split-grid fs-anim">
               <div className="fs-card fs-form-card">
@@ -1328,9 +1301,6 @@ export default function FlightSysFullDashboard() {
             </div>
           )}
 
-          {/* ============================================================== */}
-          {/* VIEW 2: PASSENGERS CRUD                                        */}
-          {/* ============================================================== */}
           {activeTab === "Passengers" && (
             <div className="fs-split-grid fs-anim">
               <div className="fs-card fs-form-card">
@@ -1496,9 +1466,6 @@ export default function FlightSysFullDashboard() {
             </div>
           )}
 
-          {/* ============================================================== */}
-          {/* VIEW 3: BOOKINGS CRUD                                          */}
-          {/* ============================================================== */}
           {activeTab === "Bookings" && (
             <div className="fs-split-grid fs-anim">
               <div className="fs-card fs-form-card">
@@ -1693,9 +1660,6 @@ export default function FlightSysFullDashboard() {
             </div>
           )}
 
-          {/* ============================================================== */}
-          {/* VIEW 4: PAYMENTS CRUD                                          */}
-          {/* ============================================================== */}
           {activeTab === "Payments" && (
             <div className="fs-split-grid fs-anim">
               <div className="fs-card fs-form-card">
@@ -1743,6 +1707,7 @@ export default function FlightSysFullDashboard() {
                         value={payMethod}
                         onChange={(e) => setPayMethod(e.target.value as Payment["method"])}
                       >
+                      <option value="Cash">Cash</option>
                         <option value="GCash">GCash</option>
                         <option value="Credit Card">Credit Card</option>
                         <option value="Maya">Maya</option>
@@ -1870,9 +1835,6 @@ export default function FlightSysFullDashboard() {
             </div>
           )}
 
-          {/* ============================================================== */}
-          {/* VIEW 5: USERS CRUD                                             */}
-          {/* ============================================================== */}
           {activeTab === "Users" && (
             <div className="fs-split-grid fs-anim">
               <div className="fs-card fs-form-card">
@@ -2019,7 +1981,6 @@ export default function FlightSysFullDashboard() {
         </div>
       </main>
 
-      {/* DIGITAL BOARDING PASS MODAL */}
       {selectedTicket && (
         <div className="fs-modal-backdrop" onClick={() => setSelectedTicket(null)}>
           <div className="fs-boarding-pass" onClick={(e) => e.stopPropagation()}>
@@ -2135,7 +2096,6 @@ const CSS = `
   background-size: 72px 100%;
 }
 
-/* HEADER */
 .fs-header {
   position: relative;
   z-index: 10;
@@ -2247,7 +2207,6 @@ const CSS = `
 .fs-logout-btn svg { width: 15px; height: 15px; }
 .fs-logout-btn:hover { background: #ff253a; color: #ffffff; }
 
-/* MAIN CONTAINER */
 .fs-main {
   position: relative;
   z-index: 1;
@@ -2265,7 +2224,6 @@ const CSS = `
   gap: 26px;
 }
 
-/* STEPPER BAR */
 .fs-stepper {
   display: flex;
   flex-wrap: wrap;
@@ -2326,7 +2284,6 @@ const CSS = `
   user-select: none;
 }
 
-/* TOAST */
 .fs-toast {
   padding: 12px 16px;
   border-radius: 11px;
@@ -2346,7 +2303,6 @@ const CSS = `
   color: #ff6b79;
 }
 
-/* WELCOME BACK HERO HEADER */
 .fs-welcome-hero {
   display: flex;
   justify-content: space-between;
@@ -2404,7 +2360,6 @@ const CSS = `
   gap: 12px;
 }
 
-/* HOW IT WORKS GUIDE SECTION */
 .fs-guide-box {
   margin-top: 24px;
   padding: 26px 28px;
@@ -2501,7 +2456,6 @@ const CSS = `
   color: #8c8c9c;
 }
 
-/* SPLIT GRID (LEFT FORM + RIGHT TABLE) */
 .fs-split-grid {
   display: grid;
   grid-template-columns: 350px 1fr;
@@ -2579,7 +2533,6 @@ const CSS = `
   color: #ffffff;
 }
 
-/* FORM STYLES */
 .fs-form {
   display: flex;
   flex-direction: column;
@@ -2665,7 +2618,6 @@ const CSS = `
   white-space: nowrap;
 }
 
-/* TABLE STYLES */
 .fs-table-wrap {
   width: 100%;
   overflow-x: auto;
@@ -2808,7 +2760,6 @@ const CSS = `
   color: #ffffff;
 }
 
-/* DASHBOARD STATS & BOTTOM GRID */
 .fs-stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -2848,7 +2799,6 @@ const CSS = `
   margin-top: 24px;
 }
 
-/* AUDIT LOG */
 .fs-audit-list {
   display: flex;
   flex-direction: column;
@@ -2893,7 +2843,6 @@ const CSS = `
   margin-top: 2px;
 }
 
-/* BOARDING PASS MODAL */
 .fs-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -3008,4 +2957,4 @@ const CSS = `
     grid-template-columns: 1fr;
   }
 }
-`;
+  `;
