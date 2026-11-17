@@ -42,7 +42,7 @@ interface Payment extends BaseRecord {
   transactionId: string;
   bookingRef: string;
   amount: number;
-  method: "Credit Card" | "GCash" | "Maya" | "Bank Transfer";
+  method: "Credit Card" | "GCash" | "Maya" | "Bank Transfer" | "Cash"; // Idinagdag ang Cash dito
   status: "Paid" | "Pending" | "Refunded";
   paidAt: string;
 }
@@ -83,7 +83,7 @@ const DEFAULT_BOOKINGS: Booking[] = [
 const DEFAULT_PAYMENTS: Payment[] = [
   { id: 1, transactionId: "TXN-8801", bookingRef: "BK-102", amount: 4500, method: "GCash", status: "Paid", paidAt: "Nov 17, 2026" },
   { id: 2, transactionId: "TXN-8802", bookingRef: "BK-103", amount: 10400, method: "Credit Card", status: "Pending", paidAt: "Nov 17, 2026" },
-  { id: 3, transactionId: "TXN-8803", bookingRef: "BK-104", amount: 37000, method: "Bank Transfer", status: "Paid", paidAt: "Nov 17, 2026" },
+  { id: 3, transactionId: "TXN-8803", bookingRef: "BK-104", amount: 37000, method: "Cash", status: "Paid", paidAt: "Nov 17, 2026" },
 ];
 
 const DEFAULT_USERS: SystemUser[] = [
@@ -165,7 +165,7 @@ export default function FlightSysFullDashboard() {
 
   const [payBookingRef, setPayBookingRef] = useState("");
   const [payAmount, setPayAmount] = useState("");
-  const [payMethod, setPayMethod] = useState<Payment["method"]>("GCash");
+  const [payMethod, setPayMethod] = useState<Payment["method"]>("Cash");
   const [payStatus, setPayStatus] = useState<Payment["status"]>("Paid");
 
   const [newUsername, setNewUsername] = useState("");
@@ -182,12 +182,11 @@ export default function FlightSysFullDashboard() {
     setAuditLogs((prev) => [{ id: Date.now(), method, module, description, timestamp: now }, ...prev.slice(0, 14)]);
   };
 
+  // Secure token & session validation on load
   useEffect(() => {
-    // Kunin ang active user at ang access token
     const activeUser = localStorage.getItem("flightsys:activeUser");
     const accessToken = localStorage.getItem("flightsys:token");
 
-    // Kapag walang token o walang user, harangin at ibalik sa login page
     if (!accessToken || !activeUser) {
       router.replace("/login");
       return;
@@ -291,9 +290,9 @@ export default function FlightSysFullDashboard() {
         transactionId: String(raw.transactionId ?? `TXN-${8800 + idx}`),
         bookingRef: String(raw.bookingRef ?? "BK-102"),
         amount: Number(String(raw.amount ?? 4500).replace(/[^0-9.]/g, "")) || 4500,
-        method: (["Credit Card", "GCash", "Maya", "Bank Transfer"].includes(String(raw.method))
+        method: (["Credit Card", "GCash", "Maya", "Bank Transfer", "Cash"].includes(String(raw.method))
           ? raw.method
-          : "GCash") as Payment["method"],
+          : "Cash") as Payment["method"],
         status: (["Paid", "Pending", "Refunded"].includes(String(raw.status))
           ? raw.status
           : "Paid") as Payment["status"],
@@ -719,6 +718,7 @@ export default function FlightSysFullDashboard() {
     });
   }, [users, searchQuery, statusFilter]);
 
+  // Updated Logout function removing token and session
   const handleLogout = () => {
     localStorage.removeItem("flightsys:activeUser");
     localStorage.removeItem("skyline:activeUser");
@@ -1002,7 +1002,7 @@ export default function FlightSysFullDashboard() {
                     </div>
                     <h3>Settle Payments</h3>
                     <p>
-                      Enter a Booking Ref to auto-calculate the ticket fare and log transactions via GCash, Maya, or Card.
+                      Enter a Booking Ref to auto-calculate the ticket fare and log transactions via Cash, GCash, or Card.
                     </p>
                   </div>
                 </div>
@@ -1707,7 +1707,7 @@ export default function FlightSysFullDashboard() {
                         value={payMethod}
                         onChange={(e) => setPayMethod(e.target.value as Payment["method"])}
                       >
-                      <option value="Cash">Cash</option>
+                        <option value="Cash">Cash</option>
                         <option value="GCash">GCash</option>
                         <option value="Credit Card">Credit Card</option>
                         <option value="Maya">Maya</option>
@@ -1912,7 +1912,7 @@ export default function FlightSysFullDashboard() {
                     <select
                       className="fs-filter-select"
                       value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
+                      onChange={(e) => setSearchQuery(e.target.value)}
                     >
                       <option value="ALL">All Roles</option>
                       <option value="admin">Admin</option>
