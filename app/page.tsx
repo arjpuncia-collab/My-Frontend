@@ -110,9 +110,9 @@ export default function HomePage() {
                 </svg>
               </Link>
 
-              <Link href="/login" className="hm-btn hm-btn-ghost">
-                <span>Sign In</span>
-              </Link>
+              <Link href="/register" className="hm-login-link">
+  Register
+</Link>
             </div>
 
             <div className="hm-stats-row hm-anim" style={{ animationDelay: "0.3s" }}>
