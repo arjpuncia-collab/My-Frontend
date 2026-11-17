@@ -36,9 +36,14 @@ const toNumber = (value: string | undefined, fallback: number): number => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+export const API_URL =
+  readEnv('NEXT_PUBLIC_API_URL') ||
+  readEnv('VITE_API_URL') ||
+  'http://localhost:3000';
+
 export const config: AppConfig = {
   appName: readEnv('VITE_APP_NAME') ?? 'Puncia',
-  apiBaseUrl: readEnv('VITE_API_URL') ?? 'http://localhost:3000',
+  apiBaseUrl: API_URL,
   apiTimeout: toNumber(readEnv('VITE_API_TIMEOUT'), 15000),
   isProduction:
     (readEnv('NODE_ENV') ?? '').toLowerCase() === 'production' ||

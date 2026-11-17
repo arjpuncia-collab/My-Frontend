@@ -21,6 +21,152 @@ html {
   scroll-behavior: smooth;
 }
 
+html,
+body,
+#__next {
+  width: 100% !important;
+  min-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: hidden;
+}
+
+.sk-navbar-inner,
+.sk-main,
+.sk-header-inner,
+.fs-navbar-inner,
+.fs-main,
+.fs-header-inner {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.sk-navbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 20px 48px;
+}
+
+.sk-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 20px 48px;
+}
+
+.sk-main {
+  display: grid;
+  grid-template-columns: 1fr 460px;
+  gap: 80px;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  width: 100%;
+  padding: 32px 8vw 48px;
+}
+
+.sk-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.sk-card {
+  width: 100%;
+  max-width: 460px;
+}
+
+.sk-copyright {
+  width: 100%;
+  margin-top: 20px;
+  text-align: center;
+}
+
+.sk-left {
+  max-width: 580px;
+}
+
+.sk-visual-card {
+  width: 100%;
+  max-width: 520px;
+}
+
+.fs-register-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.fs-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.fs-logo-plane {
+  color: #ff2a55;
+}
+
+.fs-brand-text {
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: white;
+}
+
+.fs-brand-text span {
+  color: #ff2a55;
+}
+
+.fs-nav-center {
+  display: flex;
+  gap: 50px;
+}
+
+.fs-nav-center a {
+  color: #9ca3af;
+  text-decoration: none;
+  font-size: 15px;
+  transition: .2s;
+}
+
+.fs-nav-center a:hover {
+  color: white;
+}
+
+.fs-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.fs-login-btn {
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.fs-start-btn {
+  padding: 14px 30px;
+  border-radius: 12px;
+  text-decoration: none;
+  background: #ff2a55;
+  color: white;
+  font-weight: 700;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -532,6 +678,11 @@ footer p {
   background: rgba(8,9,13,.55);
 }
 
+.fs-navbar-inner {
+  max-width: 1800px;
+  padding: 20px 80px;
+}
+
 .fs-brand {
   display: flex;
   align-items: center;
@@ -581,14 +732,29 @@ footer p {
 /* MAIN LAYOUT */
 
 .fs-main {
-  width: min(1240px, 90%);
-  min-height: calc(100vh - 82px);
-  margin: auto;
-  padding: 55px 0;
+  position: relative;
+  z-index: 1;
+  flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 460px;
+  width: 100%;
+  min-height: calc(100vh - 90px);
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 30px 80px;
+  gap: 120px;
   align-items: center;
-  gap: 75px;
+}
+
+@media (min-width: 1024px) {
+  .fs-main {
+    grid-template-columns: 1.4fr 0.9fr;
+    min-height: calc(100vh - 90px);
+  }
+
+  .fs-register-area {
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 /* HERO SECTION */
@@ -613,13 +779,20 @@ footer p {
   letter-spacing: 2px;
 }
 
-.fs-hero h1 {
+.fs-hero h1,
+.fs-hero-title {
   margin: 0;
   color: #fff;
-  font-size: clamp(48px, 5vw, 70px);
+  font-size: clamp(60px, 8vw, 110px);
   line-height: 1.12;
   letter-spacing: -3px;
   font-weight: 900;
+}
+
+.fs-hero-title {
+  font-size: clamp(70px, 8vw, 120px);
+  line-height: 1;
+  font-weight: 800;
 }
 
 .fs-hero h1 span {
@@ -627,18 +800,31 @@ footer p {
 }
 
 .fs-description {
-  max-width: 450px;
+  max-width: 700px;
   margin: 22px 0 0;
   color: #a1a2ad;
-  font-size: 15px;
+  font-size: 22px;
   line-height: 1.9;
+}
+
+.fs-register-card {
+  width: 100%;
+  max-width: 650px;
+  padding: 50px;
 }
 
 /* FLIGHT VISUAL */
 
+.fs-brand-text {
+  font-size: 32px;
+  font-weight: 900;
+}
+
 .fs-flight-visual {
   position: relative;
-  height: 245px;
+  width: 100%;
+  max-width: 900px;
+  height: 380px;
   margin-top: 38px;
   display: flex;
   align-items: center;
@@ -1195,6 +1381,25 @@ footer p {
   backdrop-filter: blur(16px);
 }
 
+.fs-navbar {
+  position: relative;
+  z-index: 30;
+  width: 100%;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  background: rgba(7,7,11,.6);
+  backdrop-filter: blur(20px);
+}
+
+.fs-navbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 20px 80px;
+}
+
 .fs-brand {
   display: flex;
   align-items: center;
@@ -1205,8 +1410,8 @@ footer p {
 }
 
 .fs-brand-icon {
-  width: 43px;
-  height: 43px;
+  width: 48px;
+  height: 48px;
   display: grid;
   place-items: center;
   color: white;
