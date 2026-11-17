@@ -110,8 +110,8 @@ export default function HomePage() {
                 </svg>
               </Link>
 
-              <Link href="/register" className="hm-login-link">
-  Register
+              <Link href="/register" className="hm-btn hm-btn-ghost sm">
+  <span>Register</span>
 </Link>
             </div>
 
